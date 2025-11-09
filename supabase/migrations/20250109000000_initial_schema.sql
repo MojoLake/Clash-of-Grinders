@@ -33,7 +33,19 @@ CREATE TABLE rooms (
 
 CREATE INDEX idx_rooms_created_by ON rooms(created_by);
 
--- Enable RLS
+-- Create room_memberships table (before rooms policies that reference it)
+CREATE TABLE room_memberships (
+  room_id UUID REFERENCES rooms(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  role TEXT DEFAULT 'member' CHECK (role IN ('owner', 'admin', 'member')),
+  joined_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+  PRIMARY KEY (room_id, user_id)
+);
+
+CREATE INDEX idx_room_memberships_user ON room_memberships(user_id);
+CREATE INDEX idx_room_memberships_room ON room_memberships(room_id);
+
+-- Enable RLS for rooms
 ALTER TABLE rooms ENABLE ROW LEVEL SECURITY;
 
 -- Rooms policies
@@ -51,19 +63,7 @@ CREATE POLICY "Authenticated users can create rooms"
   ON rooms FOR INSERT
   WITH CHECK (auth.uid() IS NOT NULL);
 
--- Create room_memberships table
-CREATE TABLE room_memberships (
-  room_id UUID REFERENCES rooms(id) ON DELETE CASCADE,
-  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
-  role TEXT DEFAULT 'member' CHECK (role IN ('owner', 'admin', 'member')),
-  joined_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
-  PRIMARY KEY (room_id, user_id)
-);
-
-CREATE INDEX idx_room_memberships_user ON room_memberships(user_id);
-CREATE INDEX idx_room_memberships_room ON room_memberships(room_id);
-
--- Enable RLS
+-- Enable RLS for room_memberships
 ALTER TABLE room_memberships ENABLE ROW LEVEL SECURITY;
 
 -- Room memberships policies
