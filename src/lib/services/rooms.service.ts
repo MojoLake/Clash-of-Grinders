@@ -73,4 +73,45 @@ export class RoomsService {
     // Step 5: Return mapped room
     return dbRoomToRoom(dbRoom as DbRoom);
   }
+
+  /**
+   * Adds a user to an existing room as a member.
+   * @param userId - The user's ID
+   * @param roomId - The room's ID
+   * @throws Error if room doesn't exist, user is already a member, or insertion fails
+   */
+  async joinRoom(userId: string, roomId: string): Promise<void> {
+    // Step 1: Check room exists
+    const { data: room, error: roomError } = await this.supabase
+      .from("rooms")
+      .select("id")
+      .eq("id", roomId)
+      .maybeSingle();
+
+    if (roomError) {
+      throw new Error(`Failed to check room: ${roomError.message}`);
+    }
+    if (!room) {
+      throw new Error("Room not found");
+    }
+
+    // Step 2: Check not already a member
+    const isMember = await this.isUserMember(userId, roomId);
+    if (isMember) {
+      throw new Error("User is already a member of this room");
+    }
+
+    // Step 3: Insert membership
+    const { error: insertError } = await this.supabase
+      .from("room_memberships")
+      .insert({
+        room_id: roomId,
+        user_id: userId,
+        role: "member",
+      });
+
+    if (insertError) {
+      throw new Error(`Failed to join room: ${insertError.message}`);
+    }
+  }
 }
