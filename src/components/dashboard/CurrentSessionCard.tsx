@@ -102,7 +102,7 @@ export function CurrentSessionCard() {
       <h2 className="text-2xl font-bold mb-4">Current Session</h2>
 
       {/* Big timer display */}
-      <div className="text-6xl font-mono text-center my-8">
+      <div className="text-6xl font-bold text-center my-8">
         {formatDurationWithSeconds(elapsedSeconds)}
       </div>
 
