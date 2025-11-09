@@ -1,12 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { formatDuration } from "@/lib/sessions";
 import type { TimerState, TimerData } from "@/lib/types";
 
 export function CurrentSessionCard() {
+  const router = useRouter();
   const [timerState, setTimerState] = useState<TimerState>("idle");
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
 
@@ -81,6 +83,9 @@ export function CurrentSessionCard() {
       }
 
       console.log("Session saved successfully");
+
+      // Refresh the page to update Recent Sessions list
+      router.refresh();
     } catch (error) {
       console.error("Error saving session:", error);
       // Continue with reset even if API call fails

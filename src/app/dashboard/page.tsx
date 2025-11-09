@@ -4,20 +4,23 @@ import { Badge } from "@/components/ui/badge";
 import { CurrentSessionCard } from "@/components/dashboard/CurrentSessionCard";
 import { formatDuration } from "@/lib/sessions";
 import type { Session } from "@/lib/types";
+import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth";
+import { SessionsService } from "@/lib/services/sessions.service";
 
 async function fetchRecentSessions(): Promise<Session[]> {
   try {
-    const res = await fetch("http://localhost:3000/api/sessions?limit=5", {
-      cache: "no-store",
-    });
+    const supabase = await createClient();
+    const user = await getCurrentUser(supabase);
 
-    if (!res.ok) {
-      console.error("Failed to fetch sessions");
+    if (!user) {
+      // Middleware should prevent this, but defensive coding
+      console.warn("No user found in fetchRecentSessions");
       return [];
     }
 
-    const data = await res.json();
-    return data.sessions || [];
+    const sessionsService = new SessionsService(supabase);
+    return await sessionsService.getUserSessions(user.id, { limit: 5 });
   } catch (error) {
     console.error("Error fetching sessions:", error);
     return [];
