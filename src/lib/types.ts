@@ -24,6 +24,21 @@ export interface RoomMembership {
   joinedAt: string; // ISO timestamp
 }
 
+export interface RoomMemberWithProfile {
+  userId: string;
+  role: 'owner' | 'admin' | 'member';
+  joinedAt: string; // ISO timestamp
+  profile: User; // Joined user profile data
+}
+
+export interface RoomWithDetails extends Room {
+  members: RoomMemberWithProfile[];
+  memberCount: number;
+  role: 'owner' | 'admin' | 'member'; // Current user's role
+  joinedAt: string; // Current user's join date
+  stats: RoomStats;
+}
+
 export interface Session {
   id: string; // UUID
   userId: string;
@@ -49,10 +64,10 @@ export interface LeaderboardEntry {
 }
 
 export interface RoomStats {
-  totalMembers: number;
   totalHours: number;
-  avgHoursPerMember: number;
+  totalSessions: number;
   activeToday: number; // Number of members active today
+  avgHoursPerMember: number;
 }
 
 export interface UserStats {
