@@ -1,6 +1,7 @@
 import { parseISO, startOfDay, startOfWeek, startOfMonth } from 'date-fns';
 import type { Session, LeaderboardEntry, User, Room, RoomStats, Period } from './types';
 import { calculateStreak } from './sessions';
+import { mockRooms, mockMemberships, mockSessions } from './mockData';
 
 /**
  * Compute leaderboard entries for a room based on sessions
@@ -116,5 +117,39 @@ export function getRoomStats(
     avgHoursPerMember: memberCount > 0 ? Math.round((totalHours / memberCount) * 10) / 10 : 0,
     activeToday: activeUserIds.size,
   };
+}
+
+/**
+ * Get all rooms a user is a member of, with stats
+ */
+export function getUserRooms(userId: string): Array<Room & { stats: RoomStats }> {
+  // Get user's memberships
+  const userMemberships = mockMemberships.filter(m => m.userId === userId);
+  
+  return userMemberships.map(membership => {
+    const room = mockRooms.find(r => r.id === membership.roomId);
+    if (!room) return null;
+    
+    // Get all sessions for this room
+    const roomSessions = mockSessions.filter(s => s.roomId === room.id);
+    
+    // Get member count for this room
+    const memberCount = mockMemberships.filter(m => m.roomId === room.id).length;
+    
+    // Compute stats
+    const stats = getRoomStats(room, roomSessions, memberCount);
+    
+    return {
+      ...room,
+      stats,
+    };
+  }).filter((room): room is Room & { stats: RoomStats } => room !== null);
+}
+
+/**
+ * Get all available rooms
+ */
+export function getAllRooms(): Room[] {
+  return mockRooms;
 }
 
