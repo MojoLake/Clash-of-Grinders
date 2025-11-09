@@ -8,6 +8,7 @@ import {
   calculateLongestStreak,
   formatRelativeTime,
   formatDate,
+  getTodayDateRange,
 } from "./sessions";
 import type { Session } from "./types";
 import { format, subDays, subHours, subMinutes } from "date-fns";
@@ -485,6 +486,103 @@ describe("formatDate", () => {
     const date = "2025-12-31T12:00:00Z";
     const result = formatDate(date);
     expect(result).toBe("Dec 31, 2025");
+  });
+});
+
+describe("getTodayDateRange", () => {
+  it("returns ISO date strings for start and end of today", () => {
+    const result = getTodayDateRange();
+
+    // Should have start and end properties
+    expect(result).toHaveProperty("start");
+    expect(result).toHaveProperty("end");
+
+    // Both should be valid ISO strings
+    expect(() => new Date(result.start)).not.toThrow();
+    expect(() => new Date(result.end)).not.toThrow();
+  });
+
+  it("start time should be at midnight (00:00:00)", () => {
+    const result = getTodayDateRange();
+    const startDate = new Date(result.start);
+
+    expect(startDate.getHours()).toBe(0);
+    expect(startDate.getMinutes()).toBe(0);
+    expect(startDate.getSeconds()).toBe(0);
+    expect(startDate.getMilliseconds()).toBe(0);
+  });
+
+  it("end time should be exactly 24 hours after start", () => {
+    const result = getTodayDateRange();
+    const startDate = new Date(result.start);
+    const endDate = new Date(result.end);
+
+    const diffMs = endDate.getTime() - startDate.getTime();
+    const diffHours = diffMs / (1000 * 60 * 60);
+
+    expect(diffHours).toBe(24);
+  });
+
+  it("start and end should be on consecutive days", () => {
+    const result = getTodayDateRange();
+    const startDate = new Date(result.start);
+    const endDate = new Date(result.end);
+
+    // End date should be one day after start date
+    expect(endDate.getDate()).toBe(startDate.getDate() + 1);
+  });
+
+  it("returns valid range that can be used for filtering sessions", () => {
+    const result = getTodayDateRange();
+
+    // Create mock sessions
+    const now = new Date();
+    const yesterday = subDays(now, 1);
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const sessions: Session[] = [
+      {
+        id: "s1",
+        userId: "user-1",
+        roomId: null,
+        startedAt: yesterday.toISOString(),
+        endedAt: null,
+        durationSeconds: 3600,
+        createdAt: yesterday.toISOString(),
+      },
+      {
+        id: "s2",
+        userId: "user-1",
+        roomId: null,
+        startedAt: now.toISOString(),
+        endedAt: null,
+        durationSeconds: 3600,
+        createdAt: now.toISOString(),
+      },
+      {
+        id: "s3",
+        userId: "user-1",
+        roomId: null,
+        startedAt: tomorrow.toISOString(),
+        endedAt: null,
+        durationSeconds: 3600,
+        createdAt: tomorrow.toISOString(),
+      },
+    ];
+
+    // Filter sessions using the date range
+    const filteredSessions = sessions.filter((session) => {
+      const sessionDate = new Date(session.startedAt);
+      return (
+        sessionDate >= new Date(result.start) &&
+        sessionDate < new Date(result.end)
+      );
+    });
+
+    // Should only include today's session
+    expect(filteredSessions.length).toBe(1);
+    expect(filteredSessions[0].id).toBe("s2");
   });
 });
 
