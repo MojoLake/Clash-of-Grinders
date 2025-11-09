@@ -9,6 +9,7 @@ import {
   formatRelativeTime,
   formatDate,
   getTodayDateRange,
+  getLast5DaysTotals,
 } from "./sessions";
 import type { Session } from "./types";
 import { format, subDays, subHours, subMinutes } from "date-fns";
@@ -583,6 +584,138 @@ describe("getTodayDateRange", () => {
     // Should only include today's session
     expect(filteredSessions.length).toBe(1);
     expect(filteredSessions[0].id).toBe("s2");
+  });
+});
+
+describe("getLast5DaysTotals", () => {
+  it("returns exactly 5 days", () => {
+    const sessions: Session[] = [];
+    const result = getLast5DaysTotals(sessions);
+    expect(result).toHaveLength(5);
+  });
+
+  it("last day is marked as isToday", () => {
+    const sessions: Session[] = [];
+    const result = getLast5DaysTotals(sessions);
+    expect(result[4].isToday).toBe(true);
+    expect(result[0].isToday).toBe(false);
+    expect(result[1].isToday).toBe(false);
+    expect(result[2].isToday).toBe(false);
+    expect(result[3].isToday).toBe(false);
+  });
+
+  it("aggregates multiple sessions per day correctly", () => {
+    const today = new Date();
+    const sessions: Session[] = [
+      {
+        id: "s1",
+        userId: "user-1",
+        roomId: null,
+        startedAt: today.toISOString(),
+        endedAt: null,
+        durationSeconds: 3600, // 1 hour
+        createdAt: today.toISOString(),
+      },
+      {
+        id: "s2",
+        userId: "user-1",
+        roomId: null,
+        startedAt: today.toISOString(),
+        endedAt: null,
+        durationSeconds: 1800, // 30 minutes
+        createdAt: today.toISOString(),
+      },
+    ];
+
+    const result = getLast5DaysTotals(sessions);
+    expect(result[4].seconds).toBe(5400); // Today's total: 1h 30m
+  });
+
+  it("handles empty sessions array", () => {
+    const result = getLast5DaysTotals([]);
+    expect(result).toHaveLength(5);
+    expect(result.every((d) => d.seconds === 0)).toBe(true);
+  });
+
+  it("orders days from oldest to newest", () => {
+    const today = new Date();
+    const twoDaysAgo = subDays(today, 2);
+    const fourDaysAgo = subDays(today, 4);
+
+    const sessions: Session[] = [
+      {
+        id: "s1",
+        userId: "user-1",
+        roomId: null,
+        startedAt: fourDaysAgo.toISOString(),
+        endedAt: null,
+        durationSeconds: 1000,
+        createdAt: fourDaysAgo.toISOString(),
+      },
+      {
+        id: "s2",
+        userId: "user-1",
+        roomId: null,
+        startedAt: twoDaysAgo.toISOString(),
+        endedAt: null,
+        durationSeconds: 2000,
+        createdAt: twoDaysAgo.toISOString(),
+      },
+      {
+        id: "s3",
+        userId: "user-1",
+        roomId: null,
+        startedAt: today.toISOString(),
+        endedAt: null,
+        durationSeconds: 3000,
+        createdAt: today.toISOString(),
+      },
+    ];
+
+    const result = getLast5DaysTotals(sessions);
+    
+    // First day (4 days ago) should have 1000 seconds
+    expect(result[0].seconds).toBe(1000);
+    // Third day (2 days ago) should have 2000 seconds
+    expect(result[2].seconds).toBe(2000);
+    // Last day (today) should have 3000 seconds
+    expect(result[4].seconds).toBe(3000);
+  });
+
+  it("returns zero seconds for days with no sessions", () => {
+    const today = new Date();
+    const sessions: Session[] = [
+      {
+        id: "s1",
+        userId: "user-1",
+        roomId: null,
+        startedAt: today.toISOString(),
+        endedAt: null,
+        durationSeconds: 3600,
+        createdAt: today.toISOString(),
+      },
+    ];
+
+    const result = getLast5DaysTotals(sessions);
+    // Today has data
+    expect(result[4].seconds).toBe(3600);
+    // Other days should be zero
+    expect(result[0].seconds).toBe(0);
+    expect(result[1].seconds).toBe(0);
+    expect(result[2].seconds).toBe(0);
+    expect(result[3].seconds).toBe(0);
+  });
+
+  it("normalizes dates to midnight", () => {
+    const sessions: Session[] = [];
+    const result = getLast5DaysTotals(sessions);
+
+    result.forEach((day) => {
+      expect(day.date.getHours()).toBe(0);
+      expect(day.date.getMinutes()).toBe(0);
+      expect(day.date.getSeconds()).toBe(0);
+      expect(day.date.getMilliseconds()).toBe(0);
+    });
   });
 });
 

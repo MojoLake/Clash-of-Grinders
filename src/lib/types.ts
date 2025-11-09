@@ -20,13 +20,13 @@ export interface Room {
 export interface RoomMembership {
   roomId: string;
   userId: string;
-  role: 'owner' | 'admin' | 'member';
+  role: "owner" | "admin" | "member";
   joinedAt: string; // ISO timestamp
 }
 
 export interface RoomMemberWithProfile {
   userId: string;
-  role: 'owner' | 'admin' | 'member';
+  role: "owner" | "admin" | "member";
   joinedAt: string; // ISO timestamp
   profile: User; // Joined user profile data
 }
@@ -34,7 +34,7 @@ export interface RoomMemberWithProfile {
 export interface RoomWithDetails extends Room {
   members: RoomMemberWithProfile[];
   memberCount: number;
-  role: 'owner' | 'admin' | 'member'; // Current user's role
+  role: "owner" | "admin" | "member"; // Current user's role
   joinedAt: string; // Current user's join date
   stats: RoomStats;
 }
@@ -84,6 +84,12 @@ export interface UserStats {
   } | null;
 }
 
+export interface DailyTotal {
+  date: Date; // Midnight of the day
+  seconds: number; // Total grind time
+  isToday: boolean; // Flag for styling today differently
+}
+
 // ============================================================================
 // API Request/Response Types
 // ============================================================================
@@ -111,7 +117,7 @@ export interface CreateRoomResponse {
 
 export interface GetLeaderboardParams {
   roomId: string;
-  period: 'day' | 'week' | 'month' | 'all-time';
+  period: "day" | "week" | "month" | "all-time";
 }
 
 export interface GetLeaderboardResponse {
@@ -152,9 +158,9 @@ export interface LeaderboardTableProps {
 // Utility Types
 // ============================================================================
 
-export type Period = 'day' | 'week' | 'month' | 'all-time';
+export type Period = "day" | "week" | "month" | "all-time";
 
-export type TimerState = 'idle' | 'running' | 'paused';
+export type TimerState = "idle" | "running" | "paused";
 
 export interface TimerData {
   state: TimerState;
@@ -210,7 +216,7 @@ export interface DbSession {
 export interface DbRoomMembership {
   room_id: string;
   user_id: string;
-  role: 'owner' | 'admin' | 'member';
+  role: "owner" | "admin" | "member";
   joined_at: string;
 }
 
@@ -249,7 +255,9 @@ export function dbSessionToSession(dbSession: DbSession): Session {
   };
 }
 
-export function dbMembershipToMembership(dbMembership: DbRoomMembership): RoomMembership {
+export function dbMembershipToMembership(
+  dbMembership: DbRoomMembership
+): RoomMembership {
   return {
     roomId: dbMembership.room_id,
     userId: dbMembership.user_id,
@@ -257,4 +265,3 @@ export function dbMembershipToMembership(dbMembership: DbRoomMembership): RoomMe
     joinedAt: dbMembership.joined_at,
   };
 }
-

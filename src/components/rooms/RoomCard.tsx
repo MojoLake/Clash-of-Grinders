@@ -1,17 +1,23 @@
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import type { Room, RoomStats } from '@/lib/types';
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import type { Room, RoomStats } from "@/lib/types";
 
 interface RoomCardProps {
   room: Room;
   stats: RoomStats;
+  memberCount?: number;
   onClick?: () => void;
 }
 
-export function RoomCard({ room, stats, onClick }: RoomCardProps) {
+export function RoomCard({
+  room,
+  stats,
+  memberCount = 0,
+  onClick,
+}: RoomCardProps) {
   return (
-    <Card 
-      className="p-4 cursor-pointer hover:bg-slate-800 transition" 
+    <Card
+      className="p-4 cursor-pointer hover:bg-slate-800 transition"
       onClick={onClick}
     >
       <h3 className="text-xl font-bold mb-2">{room.name}</h3>
@@ -20,7 +26,7 @@ export function RoomCard({ room, stats, onClick }: RoomCardProps) {
       )}
       <div className="flex gap-4 text-sm">
         <div>
-          <Badge variant="secondary">{stats.totalMembers} members</Badge>
+          <Badge variant="secondary">{memberCount} members</Badge>
         </div>
         <div className="text-slate-400">
           {stats.totalHours.toFixed(1)}h total
@@ -29,4 +35,3 @@ export function RoomCard({ room, stats, onClick }: RoomCardProps) {
     </Card>
   );
 }
-

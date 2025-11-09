@@ -13,7 +13,7 @@ describe("RoomCard", () => {
   };
 
   const mockStats: RoomStats = {
-    totalMembers: 5,
+    totalSessions: 15,
     totalHours: 42.5,
     avgHoursPerMember: 8.5,
     activeToday: 3,
@@ -49,7 +49,7 @@ describe("RoomCard", () => {
   });
 
   it("displays member count badge", () => {
-    render(<RoomCard room={mockRoom} stats={mockStats} />);
+    render(<RoomCard room={mockRoom} stats={mockStats} memberCount={5} />);
 
     expect(screen.getByText("5 members")).toBeInTheDocument();
   });
@@ -74,13 +74,13 @@ describe("RoomCard", () => {
 
   it("displays zero stats correctly", () => {
     const zeroStats: RoomStats = {
-      totalMembers: 0,
+      totalSessions: 0,
       totalHours: 0,
       avgHoursPerMember: 0,
       activeToday: 0,
     };
 
-    render(<RoomCard room={mockRoom} stats={zeroStats} />);
+    render(<RoomCard room={mockRoom} stats={zeroStats} memberCount={0} />);
 
     expect(screen.getByText("0 members")).toBeInTheDocument();
     expect(screen.getByText("0.0h total")).toBeInTheDocument();
@@ -89,7 +89,9 @@ describe("RoomCard", () => {
   it("calls onClick handler when clicked", () => {
     const handleClick = vi.fn();
 
-    render(<RoomCard room={mockRoom} stats={mockStats} onClick={handleClick} />);
+    render(
+      <RoomCard room={mockRoom} stats={mockStats} onClick={handleClick} />
+    );
 
     const card = screen.getByText("Math Lock-in").closest(".p-4");
     expect(card).toBeInTheDocument();
@@ -151,13 +153,15 @@ describe("RoomCard", () => {
     };
 
     const differentStats: RoomStats = {
-      totalMembers: 12,
+      totalSessions: 45,
       totalHours: 156.7,
       avgHoursPerMember: 13.1,
       activeToday: 8,
     };
 
-    render(<RoomCard room={differentRoom} stats={differentStats} />);
+    render(
+      <RoomCard room={differentRoom} stats={differentStats} memberCount={12} />
+    );
 
     expect(screen.getByText("Startup Grind")).toBeInTheDocument();
     expect(screen.getByText("12 members")).toBeInTheDocument();
@@ -166,13 +170,13 @@ describe("RoomCard", () => {
 
   it("handles very large numbers", () => {
     const largeStats: RoomStats = {
-      totalMembers: 999,
+      totalSessions: 5000,
       totalHours: 9999.9,
       avgHoursPerMember: 10.0,
       activeToday: 500,
     };
 
-    render(<RoomCard room={mockRoom} stats={largeStats} />);
+    render(<RoomCard room={mockRoom} stats={largeStats} memberCount={999} />);
 
     expect(screen.getByText("999 members")).toBeInTheDocument();
     expect(screen.getByText("9999.9h total")).toBeInTheDocument();
@@ -194,4 +198,3 @@ describe("RoomCard", () => {
     expect(descriptionParagraph).toBeUndefined();
   });
 });
-

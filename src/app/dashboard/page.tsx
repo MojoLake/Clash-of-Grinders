@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CurrentSessionCard } from "@/components/dashboard/CurrentSessionCard";
 import { TimeRangeCard } from "@/components/dashboard/TimeRangeCard";
+import { ActivityGraphCard } from "@/components/dashboard/ActivityGraphCard";
 import {
   formatDuration,
   getTodayDateRange,
@@ -76,12 +77,40 @@ async function fetchThisWeekSessions(): Promise<Session[]> {
   }
 }
 
+async function fetchLast5DaysSessions(): Promise<Session[]> {
+  try {
+    const supabase = await createClient();
+    const user = await getCurrentUser(supabase);
+
+    if (!user) {
+      console.warn("No user found in fetchLast5DaysSessions");
+      return [];
+    }
+
+    // Get sessions from 5 days ago to now
+    const fiveDaysAgo = new Date();
+    fiveDaysAgo.setDate(fiveDaysAgo.getDate() - 4);
+    fiveDaysAgo.setHours(0, 0, 0, 0);
+
+    const sessionsService = new SessionsService(supabase);
+    return await sessionsService.getUserSessions(user.id, {
+      startDate: fiveDaysAgo.toISOString(),
+      endDate: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error("Error fetching last 5 days sessions:", error);
+    return [];
+  }
+}
+
 export default async function DashboardPage() {
-  const [recentSessions, todaySessions, thisWeekSessions] = await Promise.all([
-    fetchRecentSessions(),
-    fetchTodaySessions(),
-    fetchThisWeekSessions(),
-  ]);
+  const [recentSessions, todaySessions, thisWeekSessions, last5DaysSessions] =
+    await Promise.all([
+      fetchRecentSessions(),
+      fetchTodaySessions(),
+      fetchThisWeekSessions(),
+      fetchLast5DaysSessions(),
+    ]);
 
   return (
     <AppShell title="Dashboard">
@@ -93,7 +122,7 @@ export default async function DashboardPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <TimeRangeCard sessions={todaySessions} label="Today" />
           <TimeRangeCard sessions={thisWeekSessions} label="This Week" />
-          <StatCardPlaceholder label="Streak" value="5 days" />
+          <ActivityGraphCard sessions={last5DaysSessions} />
         </div>
 
         {/* Recent Sessions */}
@@ -127,24 +156,5 @@ export default async function DashboardPage() {
         </Card>
       </div>
     </AppShell>
-  );
-}
-
-// Simple placeholder component for stats
-function StatCardPlaceholder({
-  label,
-  value,
-}: {
-  label: string;
-  value: string;
-}) {
-  return (
-    <Card className="p-4">
-      <div className="text-sm text-slate-400 mb-2">{label}</div>
-      <div className="text-3xl font-bold">{value}</div>
-      <Badge variant="secondary" className="mt-2">
-        Mock Data
-      </Badge>
-    </Card>
   );
 }

@@ -1,7 +1,14 @@
-import { parseISO, startOfDay, startOfWeek, startOfMonth } from 'date-fns';
-import type { Session, LeaderboardEntry, User, Room, RoomStats, Period } from './types';
-import { calculateStreak } from './sessions';
-import { mockRooms, mockMemberships, mockSessions } from './mockData';
+import { parseISO, startOfDay, startOfWeek, startOfMonth } from "date-fns";
+import type {
+  Session,
+  LeaderboardEntry,
+  User,
+  Room,
+  RoomStats,
+  Period,
+} from "./types";
+import { calculateStreak } from "./sessions";
+import { mockRooms, mockMemberships, mockSessions } from "./mockData";
 
 /**
  * Compute leaderboard entries for a room based on sessions
@@ -9,14 +16,14 @@ import { mockRooms, mockMemberships, mockSessions } from './mockData';
 export function computeLeaderboard(
   sessions: Session[],
   users: Map<string, User>,
-  period: Period = 'week'
+  period: Period = "week"
 ): LeaderboardEntry[] {
   // Filter sessions by period
   const filteredSessions = filterSessionsByPeriod(sessions, period);
 
   // Group sessions by user
   const userSessions = new Map<string, Session[]>();
-  filteredSessions.forEach(session => {
+  filteredSessions.forEach((session) => {
     const existing = userSessions.get(session.userId) || [];
     userSessions.set(session.userId, [...existing, session]);
   });
@@ -42,7 +49,7 @@ export function computeLeaderboard(
     entries.push({
       userId,
       user,
-      roomId: userSessionList[0].roomId || '',
+      roomId: userSessionList[0].roomId || "",
       totalSeconds,
       streakDays,
       lastActiveAt: lastSession.startedAt,
@@ -62,8 +69,11 @@ export function computeLeaderboard(
 /**
  * Filter sessions by time period
  */
-function filterSessionsByPeriod(sessions: Session[], period: Period): Session[] {
-  if (period === 'all-time') {
+function filterSessionsByPeriod(
+  sessions: Session[],
+  period: Period
+): Session[] {
+  if (period === "all-time") {
     return sessions;
   }
 
@@ -71,20 +81,20 @@ function filterSessionsByPeriod(sessions: Session[], period: Period): Session[] 
   let cutoffDate: Date;
 
   switch (period) {
-    case 'day':
+    case "day":
       cutoffDate = startOfDay(now);
       break;
-    case 'week':
+    case "week":
       cutoffDate = startOfWeek(now, { weekStartsOn: 1 });
       break;
-    case 'month':
+    case "month":
       cutoffDate = startOfMonth(now);
       break;
     default:
       return sessions;
   }
 
-  return sessions.filter(session => {
+  return sessions.filter((session) => {
     const sessionDate = parseISO(session.startedAt);
     return sessionDate >= cutoffDate;
   });
@@ -107,14 +117,15 @@ export function getRoomStats(
   const today = startOfDay(new Date());
   const activeUserIds = new Set(
     sessions
-      .filter(session => parseISO(session.startedAt) >= today)
-      .map(session => session.userId)
+      .filter((session) => parseISO(session.startedAt) >= today)
+      .map((session) => session.userId)
   );
 
   return {
-    totalMembers: memberCount,
     totalHours: Math.round(totalHours * 10) / 10, // Round to 1 decimal
-    avgHoursPerMember: memberCount > 0 ? Math.round((totalHours / memberCount) * 10) / 10 : 0,
+    totalSessions: sessions.length,
+    avgHoursPerMember:
+      memberCount > 0 ? Math.round((totalHours / memberCount) * 10) / 10 : 0,
     activeToday: activeUserIds.size,
   };
 }
@@ -122,28 +133,34 @@ export function getRoomStats(
 /**
  * Get all rooms a user is a member of, with stats
  */
-export function getUserRooms(userId: string): Array<Room & { stats: RoomStats }> {
+export function getUserRooms(
+  userId: string
+): Array<Room & { stats: RoomStats }> {
   // Get user's memberships
-  const userMemberships = mockMemberships.filter(m => m.userId === userId);
-  
-  return userMemberships.map(membership => {
-    const room = mockRooms.find(r => r.id === membership.roomId);
-    if (!room) return null;
-    
-    // Get all sessions for this room
-    const roomSessions = mockSessions.filter(s => s.roomId === room.id);
-    
-    // Get member count for this room
-    const memberCount = mockMemberships.filter(m => m.roomId === room.id).length;
-    
-    // Compute stats
-    const stats = getRoomStats(room, roomSessions, memberCount);
-    
-    return {
-      ...room,
-      stats,
-    };
-  }).filter((room): room is Room & { stats: RoomStats } => room !== null);
+  const userMemberships = mockMemberships.filter((m) => m.userId === userId);
+
+  return userMemberships
+    .map((membership) => {
+      const room = mockRooms.find((r) => r.id === membership.roomId);
+      if (!room) return null;
+
+      // Get all sessions for this room
+      const roomSessions = mockSessions.filter((s) => s.roomId === room.id);
+
+      // Get member count for this room
+      const memberCount = mockMemberships.filter(
+        (m) => m.roomId === room.id
+      ).length;
+
+      // Compute stats
+      const stats = getRoomStats(room, roomSessions, memberCount);
+
+      return {
+        ...room,
+        stats,
+      };
+    })
+    .filter((room): room is Room & { stats: RoomStats } => room !== null);
 }
 
 /**
@@ -152,4 +169,3 @@ export function getUserRooms(userId: string): Array<Room & { stats: RoomStats }>
 export function getAllRooms(): Room[] {
   return mockRooms;
 }
-

@@ -217,7 +217,7 @@ describe("getRoomStats", () => {
     const stats = getRoomStats(room, sessions, 2);
 
     expect(stats.totalHours).toBe(3.0); // 3 hours total
-    expect(stats.totalMembers).toBe(2);
+    expect(stats.totalSessions).toBe(2);
   });
 
   it("rounds total hours to 1 decimal place", () => {
@@ -270,7 +270,7 @@ describe("getRoomStats", () => {
     const stats = getRoomStats(room, sessions, 0);
 
     expect(stats.avgHoursPerMember).toBe(0);
-    expect(stats.totalMembers).toBe(0);
+    expect(stats.totalSessions).toBe(0);
   });
 
   it("counts active users today correctly", () => {
@@ -325,7 +325,7 @@ describe("getRoomStats", () => {
     expect(stats.totalHours).toBe(0);
     expect(stats.avgHoursPerMember).toBe(0);
     expect(stats.activeToday).toBe(0);
-    expect(stats.totalMembers).toBe(5);
+    expect(stats.totalSessions).toBe(0);
   });
 });
 
@@ -336,7 +336,7 @@ describe("getUserRooms", () => {
     expect(userRooms.length).toBeGreaterThan(0);
     userRooms.forEach((room) => {
       expect(room.stats).toBeDefined();
-      expect(room.stats.totalMembers).toBeGreaterThanOrEqual(0);
+      expect(room.stats.totalSessions).toBeGreaterThanOrEqual(0);
       expect(room.stats.totalHours).toBeGreaterThanOrEqual(0);
       expect(room.stats.avgHoursPerMember).toBeGreaterThanOrEqual(0);
       expect(room.stats.activeToday).toBeGreaterThanOrEqual(0);

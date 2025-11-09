@@ -5,7 +5,7 @@ import {
   differenceInDays,
   format,
 } from "date-fns";
-import type { Session } from "./types";
+import type { Session, DailyTotal } from "./types";
 
 /**
  * Calculate total seconds of sessions for a specific day
@@ -227,4 +227,29 @@ export function getThisWeekDateRange(): { start: string; end: string } {
     start: weekStart.toISOString(),
     end: weekEnd.toISOString(),
   };
+}
+
+/**
+ * Get daily totals for the last N days (including today)
+ * Returns array of { date: Date, seconds: number, isToday: boolean }
+ * Days are ordered from oldest to newest (today is last)
+ */
+export function getLast5DaysTotals(sessions: Session[]): DailyTotal[] {
+  const result: DailyTotal[] = [];
+  const today = new Date();
+
+  for (let i = 4; i >= 0; i--) {
+    const date = new Date(today);
+    date.setDate(date.getDate() - i);
+
+    const dayTotal = calculateDayTotal(sessions, date);
+
+    result.push({
+      date: startOfDay(date),
+      seconds: dayTotal,
+      isToday: i === 0,
+    });
+  }
+
+  return result;
 }
