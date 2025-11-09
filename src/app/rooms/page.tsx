@@ -3,14 +3,29 @@ import { TopBar } from "@/components/layout/TopBar";
 import { RoomCard } from "@/components/rooms/RoomCard";
 import { CreateRoomDialog } from "@/components/rooms/CreateRoomDialog";
 import { JoinRoomDialog } from "@/components/rooms/JoinRoomDialog";
-import { getUserRooms, getAllRooms } from "@/lib/rooms";
-import { getCurrentUser } from "@/lib/mockUser";
+import { createClient } from "@/lib/supabase/server";
+import { RoomsService } from "@/lib/services/rooms.service";
+import { getCurrentUser } from "@/lib/auth";
+import { redirect } from "next/navigation";
 import Link from "next/link";
 
-export default function RoomsPage() {
-  const user = getCurrentUser();
-  const userRooms = getUserRooms(user.id);
-  const allRooms = getAllRooms();
+export default async function RoomsPage() {
+  // Create Supabase client
+  const supabase = await createClient();
+
+  // Get authenticated user
+  const user = await getCurrentUser(supabase);
+
+  // Handle unauthenticated state
+  if (!user) {
+    redirect("/dev-login");
+  }
+
+  // Instantiate RoomsService
+  const roomsService = new RoomsService(supabase);
+
+  // Fetch user's rooms with full details
+  const userRooms = await roomsService.getUserRooms(user.id);
 
   return (
     <AppShell>
@@ -21,7 +36,7 @@ export default function RoomsPage() {
           <h1 className="text-3xl font-bold">Your Rooms</h1>
           <div className="flex gap-2">
             <JoinRoomDialog
-              availableRooms={allRooms}
+              availableRooms={[]}
               userRoomIds={userRooms.map((r) => r.id)}
             />
             <CreateRoomDialog />
@@ -38,7 +53,7 @@ export default function RoomsPage() {
               Create a new room or join an existing one to get started.
             </p>
             <div className="flex gap-2 justify-center">
-              <JoinRoomDialog availableRooms={allRooms} userRoomIds={[]} />
+              <JoinRoomDialog availableRooms={[]} userRoomIds={[]} />
               <CreateRoomDialog />
             </div>
           </div>
@@ -49,7 +64,11 @@ export default function RoomsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {userRooms.map((room) => (
               <Link key={room.id} href={`/rooms/${room.id}`}>
-                <RoomCard room={room} stats={room.stats} />
+                <RoomCard
+                  room={room}
+                  stats={room.stats}
+                  memberCount={room.memberCount}
+                />
               </Link>
             ))}
           </div>
