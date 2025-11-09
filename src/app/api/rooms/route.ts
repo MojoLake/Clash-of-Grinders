@@ -44,8 +44,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Get authenticated user
+    console.log("MOOOI!");
     const supabase = await createClient();
+    console.log("Supabase", supabase);
     const user = await getAuthenticatedUser(supabase);
+
+    console.log("User ID", user.id);
+    console.log("HABLABALBA");
 
     // Create room
     const roomsService = new RoomsService(supabase);
@@ -102,4 +107,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-

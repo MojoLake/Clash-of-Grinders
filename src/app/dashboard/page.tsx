@@ -14,6 +14,9 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
 import { SessionsService } from "@/lib/services/sessions.service";
 
+// Force dynamic rendering - this page uses cookies for auth
+export const dynamic = "force-dynamic";
+
 async function fetchRecentSessions(): Promise<Session[]> {
   try {
     const supabase = await createClient();

@@ -61,11 +61,7 @@ export default async function RoomsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {userRooms.map((room) => (
               <Link key={room.id} href={`/rooms/${room.id}`}>
-                <RoomCard
-                  room={room}
-                  stats={room.stats}
-                  memberCount={room.memberCount}
-                />
+                <RoomCard room={room} />
               </Link>
             ))}
           </div>
