@@ -1,6 +1,13 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Room, DbRoom, CreateRoomRequest, RoomStats } from "@/lib/types";
-import { dbRoomToRoom } from "@/lib/types";
+import type {
+  Room,
+  DbRoom,
+  CreateRoomRequest,
+  RoomStats,
+  RoomMemberWithProfile,
+  DbUser,
+} from "@/lib/types";
+import { dbRoomToRoom, dbUserToUser } from "@/lib/types";
 
 export class RoomsService {
   constructor(private supabase: SupabaseClient) {}
@@ -242,5 +249,47 @@ export class RoomsService {
       activeToday,
       avgHoursPerMember,
     };
+  }
+
+  /**
+   * Retrieves all members of a room with their profile information.
+   * @param roomId - The room's ID
+   * @returns Array of members with profile data, ordered by join date
+   * @throws Error if query fails
+   */
+  async getRoomMembers(roomId: string): Promise<RoomMemberWithProfile[]> {
+    const { data: memberships, error } = await this.supabase
+      .from("room_memberships")
+      .select(
+        `
+      user_id,
+      role,
+      joined_at,
+      profiles (
+        id,
+        display_name,
+        avatar_url,
+        created_at
+      )
+    `
+      )
+      .eq("room_id", roomId)
+      .order("joined_at", { ascending: true });
+
+    if (error) {
+      throw new Error(`Failed to fetch room members: ${error.message}`);
+    }
+
+    if (!memberships || memberships.length === 0) {
+      return [];
+    }
+
+    // Map database results to RoomMemberWithProfile
+    return memberships.map((membership) => ({
+      userId: membership.user_id,
+      role: membership.role as "owner" | "admin" | "member",
+      joinedAt: membership.joined_at,
+      profile: dbUserToUser(membership.profiles as unknown as DbUser),
+    }));
   }
 }
