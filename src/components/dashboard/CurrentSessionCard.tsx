@@ -63,6 +63,12 @@ export function CurrentSessionCard() {
   };
 
   const handleEnd = async () => {
+    // Prevent ending sessions less than 1 second
+    if (elapsedSeconds < 1) {
+      alert("Please wait at least 1 second before ending a session.");
+      return;
+    }
+
     const endedAt = new Date();
     const startedAt = new Date(endedAt.getTime() - elapsedSeconds * 1000);
 
@@ -79,22 +85,27 @@ export function CurrentSessionCard() {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to save session");
+        const errorData = await response.json();
+        const errorMessage = errorData.error || "Failed to save session";
+        alert(`Error saving session: ${errorMessage}`);
+        return;
       }
 
       console.log("Session saved successfully");
+
+      // Reset state
+      setTimerState("idle");
+      setElapsedSeconds(0);
+      localStorage.removeItem("currentSession");
 
       // Refresh the page to update Recent Sessions list
       router.refresh();
     } catch (error) {
       console.error("Error saving session:", error);
-      // Continue with reset even if API call fails
+      alert(
+        "An unexpected error occurred while saving the session. Please try again."
+      );
     }
-
-    // Reset state
-    setTimerState("idle");
-    setElapsedSeconds(0);
-    localStorage.removeItem("currentSession");
   };
 
   return (
@@ -107,29 +118,44 @@ export function CurrentSessionCard() {
       </div>
 
       {/* Control buttons */}
-      <div className="flex gap-2 justify-center">
-        {timerState === "idle" && (
-          <Button onClick={handleStart} size="lg">
-            Start Grinding
-          </Button>
-        )}
-        {timerState === "running" && (
-          <>
-            <Button onClick={handlePause} variant="outline">
-              Pause
+      <div className="flex flex-col gap-2 items-center">
+        <div className="flex gap-2 justify-center">
+          {timerState === "idle" && (
+            <Button onClick={handleStart} size="lg">
+              Start Grinding
             </Button>
-            <Button onClick={handleEnd} variant="destructive">
-              End Session
-            </Button>
-          </>
-        )}
-        {timerState === "paused" && (
-          <>
-            <Button onClick={handleResume}>Resume</Button>
-            <Button onClick={handleEnd} variant="destructive">
-              End Session
-            </Button>
-          </>
+          )}
+          {timerState === "running" && (
+            <>
+              <Button onClick={handlePause} variant="outline">
+                Pause
+              </Button>
+              <Button
+                onClick={handleEnd}
+                variant="destructive"
+                disabled={elapsedSeconds < 1}
+              >
+                End Session
+              </Button>
+            </>
+          )}
+          {timerState === "paused" && (
+            <>
+              <Button onClick={handleResume}>Resume</Button>
+              <Button
+                onClick={handleEnd}
+                variant="destructive"
+                disabled={elapsedSeconds < 1}
+              >
+                End Session
+              </Button>
+            </>
+          )}
+        </div>
+        {timerState !== "idle" && elapsedSeconds < 1 && (
+          <p className="text-sm text-muted-foreground">
+            Minimum 1 second required
+          </p>
         )}
       </div>
     </Card>
