@@ -40,7 +40,7 @@ describe("DevLoginPage", () => {
       screen.getByRole("heading", { name: /dev login/i })
     ).toBeInTheDocument();
     expect(screen.getByLabelText(/email/i)).toHaveValue("test@example.com");
-    expect(screen.getByLabelText(/password/i)).toHaveValue("password123");
+    expect(screen.getByLabelText(/password/i)).toHaveValue("1234");
     expect(
       screen.getByRole("button", { name: /^login$/i })
     ).toBeInTheDocument();
@@ -57,7 +57,7 @@ describe("DevLoginPage", () => {
     await waitFor(() => {
       expect(mockSignInWithPassword).toHaveBeenCalledWith({
         email: "test@example.com",
-        password: "password123",
+        password: "1234",
       });
       expect(mockPush).toHaveBeenCalledWith("/dashboard");
       expect(mockRefresh).toHaveBeenCalled();
