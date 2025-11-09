@@ -1,16 +1,25 @@
-import { startOfDay, startOfWeek, parseISO, differenceInDays, format } from 'date-fns';
-import type { Session } from './types';
+import {
+  startOfDay,
+  startOfWeek,
+  parseISO,
+  differenceInDays,
+  format,
+} from "date-fns";
+import type { Session } from "./types";
 
 /**
  * Calculate total seconds of sessions for a specific day
  */
-export function calculateDayTotal(sessions: Session[], date: Date = new Date()): number {
+export function calculateDayTotal(
+  sessions: Session[],
+  date: Date = new Date()
+): number {
   const dayStart = startOfDay(date);
   const dayEnd = new Date(dayStart);
   dayEnd.setDate(dayEnd.getDate() + 1);
 
   return sessions
-    .filter(session => {
+    .filter((session) => {
       const sessionDate = parseISO(session.startedAt);
       return sessionDate >= dayStart && sessionDate < dayEnd;
     })
@@ -20,13 +29,16 @@ export function calculateDayTotal(sessions: Session[], date: Date = new Date()):
 /**
  * Calculate total seconds of sessions for the current week (Monday-Sunday)
  */
-export function calculateWeekTotal(sessions: Session[], weekStart: Date = new Date()): number {
+export function calculateWeekTotal(
+  sessions: Session[],
+  weekStart: Date = new Date()
+): number {
   const weekStartDate = startOfWeek(weekStart, { weekStartsOn: 1 }); // Monday
   const weekEnd = new Date(weekStartDate);
   weekEnd.setDate(weekEnd.getDate() + 7);
 
   return sessions
-    .filter(session => {
+    .filter((session) => {
       const sessionDate = parseISO(session.startedAt);
       return sessionDate >= weekStartDate && sessionDate < weekEnd;
     })
@@ -41,17 +53,17 @@ export function calculateStreak(sessions: Session[]): number {
 
   // Group sessions by date
   const sessionsByDate = new Map<string, boolean>();
-  sessions.forEach(session => {
-    const dateKey = format(parseISO(session.startedAt), 'yyyy-MM-dd');
+  sessions.forEach((session) => {
+    const dateKey = format(parseISO(session.startedAt), "yyyy-MM-dd");
     sessionsByDate.set(dateKey, true);
   });
 
   // Check consecutive days starting from today
   let streak = 0;
   let currentDate = new Date();
-  
+
   while (true) {
-    const dateKey = format(currentDate, 'yyyy-MM-dd');
+    const dateKey = format(currentDate, "yyyy-MM-dd");
     if (sessionsByDate.has(dateKey)) {
       streak++;
       currentDate = new Date(currentDate);
@@ -73,7 +85,9 @@ export function calculateLongestStreak(sessions: Session[]): number {
   // Get unique dates and sort them
   const dates = Array.from(
     new Set(
-      sessions.map(session => format(parseISO(session.startedAt), 'yyyy-MM-dd'))
+      sessions.map((session) =>
+        format(parseISO(session.startedAt), "yyyy-MM-dd")
+      )
     )
   ).sort();
 
@@ -123,8 +137,20 @@ export function formatTimerDisplay(seconds: number): string {
   const secs = seconds % 60;
 
   return [hours, minutes, secs]
-    .map(val => val.toString().padStart(2, '0'))
-    .join(':');
+    .map((val) => val.toString().padStart(2, "0"))
+    .join(":");
+}
+
+/**
+ * Format seconds as HH:MM (without seconds)
+ */
+export function formatDurationHHMM(seconds: number): string {
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+
+  return [hours, minutes]
+    .map((val) => val.toString().padStart(2, "0"))
+    .join(":");
 }
 
 /**
@@ -138,19 +164,34 @@ export function formatRelativeTime(dateString: string): string {
   const diffHours = Math.floor(diffMs / 3600000);
   const diffDays = Math.floor(diffMs / 86400000);
 
-  if (diffMins < 1) return 'just now';
+  if (diffMins < 1) return "just now";
   if (diffMins < 60) return `${diffMins}m ago`;
   if (diffHours < 24) return `${diffHours}h ago`;
-  if (diffDays === 1) return 'yesterday';
+  if (diffDays === 1) return "yesterday";
   if (diffDays < 7) return `${diffDays}d ago`;
-  
-  return format(date, 'MMM d');
+
+  return format(date, "MMM d");
 }
 
 /**
  * Format a date for display (e.g., "Nov 9, 2025")
  */
 export function formatDate(dateString: string): string {
-  return format(parseISO(dateString), 'MMM d, yyyy');
+  return format(parseISO(dateString), "MMM d, yyyy");
 }
 
+/**
+ * Get today's date range (midnight to midnight) in ISO format for queries
+ * Uses the user's local timezone
+ */
+export function getTodayDateRange(): { start: string; end: string } {
+  const now = new Date();
+  const dayStart = startOfDay(now);
+  const dayEnd = new Date(dayStart);
+  dayEnd.setDate(dayEnd.getDate() + 1);
+
+  return {
+    start: dayStart.toISOString(),
+    end: dayEnd.toISOString(),
+  };
+}

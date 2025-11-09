@@ -2,7 +2,8 @@ import { AppShell } from "@/components/layout/AppShell";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CurrentSessionCard } from "@/components/dashboard/CurrentSessionCard";
-import { formatDuration } from "@/lib/sessions";
+import { TodayCard } from "@/components/dashboard/TodayCard";
+import { formatDuration, getTodayDateRange } from "@/lib/sessions";
 import type { Session } from "@/lib/types";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
@@ -27,8 +28,33 @@ async function fetchRecentSessions(): Promise<Session[]> {
   }
 }
 
+async function fetchTodaySessions(): Promise<Session[]> {
+  try {
+    const supabase = await createClient();
+    const user = await getCurrentUser(supabase);
+
+    if (!user) {
+      console.warn("No user found in fetchTodaySessions");
+      return [];
+    }
+
+    const { start, end } = getTodayDateRange();
+    const sessionsService = new SessionsService(supabase);
+    return await sessionsService.getUserSessions(user.id, {
+      startDate: start,
+      endDate: end,
+    });
+  } catch (error) {
+    console.error("Error fetching today's sessions:", error);
+    return [];
+  }
+}
+
 export default async function DashboardPage() {
-  const recentSessions = await fetchRecentSessions();
+  const [recentSessions, todaySessions] = await Promise.all([
+    fetchRecentSessions(),
+    fetchTodaySessions(),
+  ]);
 
   return (
     <AppShell title="Dashboard">
@@ -36,9 +62,9 @@ export default async function DashboardPage() {
         {/* Current Session Timer */}
         <CurrentSessionCard />
 
-        {/* Placeholder: Stats Grid */}
+        {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <StatCardPlaceholder label="Today" value="2h 34m" />
+          <TodayCard sessions={todaySessions} />
           <StatCardPlaceholder label="This Week" value="15h 20m" />
           <StatCardPlaceholder label="Streak" value="5 days" />
         </div>
