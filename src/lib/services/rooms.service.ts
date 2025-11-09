@@ -356,4 +356,62 @@ export class RoomsService {
 
     return roomsWithDetails;
   }
+
+  /**
+   * Retrieves detailed information about a specific room.
+   * @param roomId - The room's ID
+   * @param userId - The user requesting details (to determine their role)
+   * @returns Complete room details with members and stats
+   * @throws Error if room not found or query fails
+   */
+  async getRoomDetails(
+    roomId: string,
+    userId: string
+  ): Promise<RoomWithDetails> {
+    // Fetch room data
+    const { data: dbRoom, error: roomError } = await this.supabase
+      .from("rooms")
+      .select("*")
+      .eq("id", roomId)
+      .maybeSingle();
+
+    if (roomError) {
+      throw new Error(`Failed to fetch room: ${roomError.message}`);
+    }
+
+    if (!dbRoom) {
+      throw new Error("Room not found");
+    }
+
+    // Fetch user's membership
+    const { data: membership, error: membershipError } = await this.supabase
+      .from("room_memberships")
+      .select("role, joined_at")
+      .eq("room_id", roomId)
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (membershipError) {
+      throw new Error(`Failed to fetch membership: ${membershipError.message}`);
+    }
+
+    if (!membership) {
+      throw new Error("User is not a member of this room");
+    }
+
+    // Fetch members and stats in parallel
+    const [members, stats] = await Promise.all([
+      this.getRoomMembers(roomId),
+      this.getRoomStats(roomId),
+    ]);
+
+    return {
+      ...dbRoomToRoom(dbRoom as DbRoom),
+      role: membership.role as "owner" | "admin" | "member",
+      joinedAt: membership.joined_at,
+      members,
+      memberCount: members.length,
+      stats,
+    };
+  }
 }
