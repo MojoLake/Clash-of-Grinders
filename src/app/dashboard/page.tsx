@@ -1,21 +1,14 @@
 import { AppShell } from "@/components/layout/AppShell";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { CurrentSessionCard } from "@/components/dashboard/CurrentSessionCard";
 
 export default function DashboardPage() {
   return (
     <AppShell title="Dashboard">
       <div className="p-6 space-y-6">
-        {/* Placeholder: Current Session */}
-        <Card className="p-6">
-          <h2 className="text-2xl font-bold mb-4">Current Session</h2>
-          <div className="text-center py-8 text-slate-400">
-            <p>Timer component coming soon...</p>
-            <p className="text-sm mt-2">
-              This will be the CurrentSessionCard component
-            </p>
-          </div>
-        </Card>
+        {/* Current Session Timer */}
+        <CurrentSessionCard />
 
         {/* Placeholder: Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
