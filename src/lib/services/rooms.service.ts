@@ -6,6 +6,7 @@ import type {
   RoomStats,
   RoomMemberWithProfile,
   DbUser,
+  RoomWithDetails,
 } from "@/lib/types";
 import { dbRoomToRoom, dbUserToUser } from "@/lib/types";
 
@@ -291,5 +292,68 @@ export class RoomsService {
       joinedAt: membership.joined_at,
       profile: dbUserToUser(membership.profiles as unknown as DbUser),
     }));
+  }
+
+  /**
+   * Retrieves all rooms a user is a member of, with full details.
+   * @param userId - The user's ID
+   * @returns Array of rooms with members, stats, and user's role
+   * @throws Error if query fails
+   */
+  async getUserRooms(userId: string): Promise<RoomWithDetails[]> {
+    // Fetch user's room memberships with room data
+    const { data: memberships, error } = await this.supabase
+      .from("room_memberships")
+      .select(
+        `
+      role,
+      joined_at,
+      rooms (
+        id,
+        name,
+        description,
+        created_by,
+        created_at
+      )
+    `
+      )
+      .eq("user_id", userId)
+      .order("joined_at", { ascending: false });
+
+    if (error) {
+      throw new Error(`Failed to fetch user rooms: ${error.message}`);
+    }
+
+    if (!memberships || memberships.length === 0) {
+      return [];
+    }
+
+    // Build RoomWithDetails for each room
+    const roomsWithDetails: RoomWithDetails[] = [];
+
+    for (const membership of memberships) {
+      const room = membership.rooms as unknown as DbRoom;
+      const roomId = room.id;
+
+      // Fetch members and stats in parallel
+      const [members, stats] = await Promise.all([
+        this.getRoomMembers(roomId),
+        this.getRoomStats(roomId),
+      ]);
+
+      roomsWithDetails.push({
+        // Base room data
+        ...dbRoomToRoom(room),
+        // User's membership info
+        role: membership.role as "owner" | "admin" | "member",
+        joinedAt: membership.joined_at,
+        // Enriched data
+        members,
+        memberCount: members.length,
+        stats,
+      });
+    }
+
+    return roomsWithDetails;
   }
 }
