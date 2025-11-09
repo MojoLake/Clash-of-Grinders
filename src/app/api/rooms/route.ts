@@ -73,3 +73,33 @@ export async function POST(request: NextRequest) {
   }
 }
 
+/**
+ * GET /api/rooms
+ * Retrieves all rooms for the current user.
+ */
+export async function GET(request: NextRequest) {
+  try {
+    // Get authenticated user
+    const supabase = await createClient();
+    const user = await getAuthenticatedUser(supabase);
+
+    // Fetch user's rooms
+    const roomsService = new RoomsService(supabase);
+    const rooms = await roomsService.getUserRooms(user.id);
+
+    return createSuccessResponse({ rooms }, 200);
+  } catch (error) {
+    console.error("Error fetching rooms:", error);
+
+    // Handle authentication errors specifically
+    if (error instanceof Error && error.message.includes("Unauthorized")) {
+      return createErrorResponse(error.message, 401);
+    }
+
+    return createErrorResponse(
+      error instanceof Error ? error.message : "Internal server error",
+      500
+    );
+  }
+}
+
