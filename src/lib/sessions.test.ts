@@ -1,5 +1,16 @@
 import { describe, it, expect } from "vitest";
-import { formatDuration, formatTimerDisplay } from "./sessions";
+import {
+  formatDuration,
+  formatTimerDisplay,
+  calculateDayTotal,
+  calculateWeekTotal,
+  calculateStreak,
+  calculateLongestStreak,
+  formatRelativeTime,
+  formatDate,
+} from "./sessions";
+import type { Session } from "./types";
+import { format, subDays, subHours, subMinutes } from "date-fns";
 
 describe("formatDuration", () => {
   it("formats seconds only when < 60s", () => {
@@ -34,6 +45,446 @@ describe("formatTimerDisplay", () => {
 
   it("formats with leading zeros for hours", () => {
     expect(formatTimerDisplay(3665)).toBe("01:01:05");
+  });
+});
+
+describe("calculateDayTotal", () => {
+  const today = new Date("2025-11-09T12:00:00Z");
+  const yesterday = subDays(today, 1);
+
+  it("calculates total for sessions on the specified day", () => {
+    const sessions: Session[] = [
+      {
+        id: "s1",
+        userId: "user-1",
+        roomId: "room-1",
+        startedAt: format(today, "yyyy-MM-dd'T'08:00:00'Z'"),
+        endedAt: null,
+        durationSeconds: 3600, // 1 hour
+        createdAt: format(today, "yyyy-MM-dd'T'08:00:00'Z'"),
+      },
+      {
+        id: "s2",
+        userId: "user-1",
+        roomId: "room-1",
+        startedAt: format(today, "yyyy-MM-dd'T'14:00:00'Z'"),
+        endedAt: null,
+        durationSeconds: 7200, // 2 hours
+        createdAt: format(today, "yyyy-MM-dd'T'14:00:00'Z'"),
+      },
+    ];
+
+    const total = calculateDayTotal(sessions, today);
+    expect(total).toBe(10800); // 3 hours
+  });
+
+  it("excludes sessions from other days", () => {
+    const sessions: Session[] = [
+      {
+        id: "s1",
+        userId: "user-1",
+        roomId: "room-1",
+        startedAt: format(today, "yyyy-MM-dd'T'08:00:00'Z'"),
+        endedAt: null,
+        durationSeconds: 3600,
+        createdAt: format(today, "yyyy-MM-dd'T'08:00:00'Z'"),
+      },
+      {
+        id: "s2",
+        userId: "user-1",
+        roomId: "room-1",
+        startedAt: format(yesterday, "yyyy-MM-dd'T'14:00:00'Z'"),
+        endedAt: null,
+        durationSeconds: 7200,
+        createdAt: format(yesterday, "yyyy-MM-dd'T'14:00:00'Z'"),
+      },
+    ];
+
+    const total = calculateDayTotal(sessions, today);
+    expect(total).toBe(3600); // Only today's session
+  });
+
+  it("returns zero for days with no sessions", () => {
+    const sessions: Session[] = [
+      {
+        id: "s1",
+        userId: "user-1",
+        roomId: "room-1",
+        startedAt: format(yesterday, "yyyy-MM-dd'T'08:00:00'Z'"),
+        endedAt: null,
+        durationSeconds: 3600,
+        createdAt: format(yesterday, "yyyy-MM-dd'T'08:00:00'Z'"),
+      },
+    ];
+
+    const total = calculateDayTotal(sessions, today);
+    expect(total).toBe(0);
+  });
+
+  it("handles empty sessions array", () => {
+    const total = calculateDayTotal([], today);
+    expect(total).toBe(0);
+  });
+});
+
+describe("calculateWeekTotal", () => {
+  const today = new Date("2025-11-09T12:00:00Z"); // Saturday
+  const twoDaysAgo = subDays(today, 2); // Thursday
+  const eightDaysAgo = subDays(today, 8); // Previous week
+
+  it("calculates total for sessions within the week", () => {
+    const sessions: Session[] = [
+      {
+        id: "s1",
+        userId: "user-1",
+        roomId: "room-1",
+        startedAt: format(today, "yyyy-MM-dd'T'08:00:00'Z'"),
+        endedAt: null,
+        durationSeconds: 3600,
+        createdAt: format(today, "yyyy-MM-dd'T'08:00:00'Z'"),
+      },
+      {
+        id: "s2",
+        userId: "user-1",
+        roomId: "room-1",
+        startedAt: format(twoDaysAgo, "yyyy-MM-dd'T'14:00:00'Z'"),
+        endedAt: null,
+        durationSeconds: 7200,
+        createdAt: format(twoDaysAgo, "yyyy-MM-dd'T'14:00:00'Z'"),
+      },
+    ];
+
+    const total = calculateWeekTotal(sessions, today);
+    expect(total).toBe(10800); // 3 hours total
+  });
+
+  it("excludes sessions from previous week", () => {
+    const sessions: Session[] = [
+      {
+        id: "s1",
+        userId: "user-1",
+        roomId: "room-1",
+        startedAt: format(today, "yyyy-MM-dd'T'08:00:00'Z'"),
+        endedAt: null,
+        durationSeconds: 3600,
+        createdAt: format(today, "yyyy-MM-dd'T'08:00:00'Z'"),
+      },
+      {
+        id: "s2",
+        userId: "user-1",
+        roomId: "room-1",
+        startedAt: format(eightDaysAgo, "yyyy-MM-dd'T'14:00:00'Z'"),
+        endedAt: null,
+        durationSeconds: 7200,
+        createdAt: format(eightDaysAgo, "yyyy-MM-dd'T'14:00:00'Z'"),
+      },
+    ];
+
+    const total = calculateWeekTotal(sessions, today);
+    expect(total).toBe(3600); // Only this week's session
+  });
+
+  it("handles empty sessions array", () => {
+    const total = calculateWeekTotal([], today);
+    expect(total).toBe(0);
+  });
+});
+
+describe("calculateStreak", () => {
+  it("calculates consecutive days with sessions", () => {
+    const today = new Date("2025-11-09T12:00:00Z");
+    const yesterday = subDays(today, 1);
+    const twoDaysAgo = subDays(today, 2);
+
+    const sessions: Session[] = [
+      {
+        id: "s1",
+        userId: "user-1",
+        roomId: "room-1",
+        startedAt: format(today, "yyyy-MM-dd'T'08:00:00'Z'"),
+        endedAt: null,
+        durationSeconds: 3600,
+        createdAt: format(today, "yyyy-MM-dd'T'08:00:00'Z'"),
+      },
+      {
+        id: "s2",
+        userId: "user-1",
+        roomId: "room-1",
+        startedAt: format(yesterday, "yyyy-MM-dd'T'14:00:00'Z'"),
+        endedAt: null,
+        durationSeconds: 7200,
+        createdAt: format(yesterday, "yyyy-MM-dd'T'14:00:00'Z'"),
+      },
+      {
+        id: "s3",
+        userId: "user-1",
+        roomId: "room-1",
+        startedAt: format(twoDaysAgo, "yyyy-MM-dd'T'10:00:00'Z'"),
+        endedAt: null,
+        durationSeconds: 1800,
+        createdAt: format(twoDaysAgo, "yyyy-MM-dd'T'10:00:00'Z'"),
+      },
+    ];
+
+    const streak = calculateStreak(sessions);
+    expect(streak).toBe(3);
+  });
+
+  it("returns zero for empty sessions", () => {
+    const streak = calculateStreak([]);
+    expect(streak).toBe(0);
+  });
+
+  it("stops counting at first gap", () => {
+    const today = new Date("2025-11-09T12:00:00Z");
+    const yesterday = subDays(today, 1);
+    const threeDaysAgo = subDays(today, 3);
+
+    const sessions: Session[] = [
+      {
+        id: "s1",
+        userId: "user-1",
+        roomId: "room-1",
+        startedAt: format(today, "yyyy-MM-dd'T'08:00:00'Z'"),
+        endedAt: null,
+        durationSeconds: 3600,
+        createdAt: format(today, "yyyy-MM-dd'T'08:00:00'Z'"),
+      },
+      {
+        id: "s2",
+        userId: "user-1",
+        roomId: "room-1",
+        startedAt: format(yesterday, "yyyy-MM-dd'T'14:00:00'Z'"),
+        endedAt: null,
+        durationSeconds: 7200,
+        createdAt: format(yesterday, "yyyy-MM-dd'T'14:00:00'Z'"),
+      },
+      // Gap on day before yesterday
+      {
+        id: "s3",
+        userId: "user-1",
+        roomId: "room-1",
+        startedAt: format(threeDaysAgo, "yyyy-MM-dd'T'10:00:00'Z'"),
+        endedAt: null,
+        durationSeconds: 1800,
+        createdAt: format(threeDaysAgo, "yyyy-MM-dd'T'10:00:00'Z'"),
+      },
+    ];
+
+    const streak = calculateStreak(sessions);
+    expect(streak).toBe(2); // Only today and yesterday
+  });
+
+  it("counts multiple sessions on same day as one day", () => {
+    const today = new Date("2025-11-09T12:00:00Z");
+
+    const sessions: Session[] = [
+      {
+        id: "s1",
+        userId: "user-1",
+        roomId: "room-1",
+        startedAt: format(today, "yyyy-MM-dd'T'08:00:00'Z'"),
+        endedAt: null,
+        durationSeconds: 3600,
+        createdAt: format(today, "yyyy-MM-dd'T'08:00:00'Z'"),
+      },
+      {
+        id: "s2",
+        userId: "user-1",
+        roomId: "room-1",
+        startedAt: format(today, "yyyy-MM-dd'T'14:00:00'Z'"),
+        endedAt: null,
+        durationSeconds: 7200,
+        createdAt: format(today, "yyyy-MM-dd'T'14:00:00'Z'"),
+      },
+    ];
+
+    const streak = calculateStreak(sessions);
+    expect(streak).toBe(1);
+  });
+});
+
+describe("calculateLongestStreak", () => {
+  it("calculates longest consecutive streak", () => {
+    const sessions: Session[] = [
+      // First streak: 3 days
+      {
+        id: "s1",
+        userId: "user-1",
+        roomId: "room-1",
+        startedAt: "2025-11-01T08:00:00Z",
+        endedAt: null,
+        durationSeconds: 3600,
+        createdAt: "2025-11-01T08:00:00Z",
+      },
+      {
+        id: "s2",
+        userId: "user-1",
+        roomId: "room-1",
+        startedAt: "2025-11-02T08:00:00Z",
+        endedAt: null,
+        durationSeconds: 3600,
+        createdAt: "2025-11-02T08:00:00Z",
+      },
+      {
+        id: "s3",
+        userId: "user-1",
+        roomId: "room-1",
+        startedAt: "2025-11-03T08:00:00Z",
+        endedAt: null,
+        durationSeconds: 3600,
+        createdAt: "2025-11-03T08:00:00Z",
+      },
+      // Gap
+      // Second streak: 2 days
+      {
+        id: "s4",
+        userId: "user-1",
+        roomId: "room-1",
+        startedAt: "2025-11-06T08:00:00Z",
+        endedAt: null,
+        durationSeconds: 3600,
+        createdAt: "2025-11-06T08:00:00Z",
+      },
+      {
+        id: "s5",
+        userId: "user-1",
+        roomId: "room-1",
+        startedAt: "2025-11-07T08:00:00Z",
+        endedAt: null,
+        durationSeconds: 3600,
+        createdAt: "2025-11-07T08:00:00Z",
+      },
+    ];
+
+    const longestStreak = calculateLongestStreak(sessions);
+    expect(longestStreak).toBe(3);
+  });
+
+  it("returns zero for empty sessions", () => {
+    const longestStreak = calculateLongestStreak([]);
+    expect(longestStreak).toBe(0);
+  });
+
+  it("returns 1 for single session", () => {
+    const sessions: Session[] = [
+      {
+        id: "s1",
+        userId: "user-1",
+        roomId: "room-1",
+        startedAt: "2025-11-01T08:00:00Z",
+        endedAt: null,
+        durationSeconds: 3600,
+        createdAt: "2025-11-01T08:00:00Z",
+      },
+    ];
+
+    const longestStreak = calculateLongestStreak(sessions);
+    expect(longestStreak).toBe(1);
+  });
+
+  it("handles sessions on non-consecutive days", () => {
+    const sessions: Session[] = [
+      {
+        id: "s1",
+        userId: "user-1",
+        roomId: "room-1",
+        startedAt: "2025-11-01T08:00:00Z",
+        endedAt: null,
+        durationSeconds: 3600,
+        createdAt: "2025-11-01T08:00:00Z",
+      },
+      {
+        id: "s2",
+        userId: "user-1",
+        roomId: "room-1",
+        startedAt: "2025-11-05T08:00:00Z",
+        endedAt: null,
+        durationSeconds: 3600,
+        createdAt: "2025-11-05T08:00:00Z",
+      },
+      {
+        id: "s3",
+        userId: "user-1",
+        roomId: "room-1",
+        startedAt: "2025-11-10T08:00:00Z",
+        endedAt: null,
+        durationSeconds: 3600,
+        createdAt: "2025-11-10T08:00:00Z",
+      },
+    ];
+
+    const longestStreak = calculateLongestStreak(sessions);
+    expect(longestStreak).toBe(1);
+  });
+});
+
+describe("formatRelativeTime", () => {
+  it("formats 'just now' for very recent times", () => {
+    const now = new Date();
+    const recent = new Date(now.getTime() - 30000); // 30 seconds ago
+    const result = formatRelativeTime(recent.toISOString());
+    expect(result).toBe("just now");
+  });
+
+  it("formats minutes ago", () => {
+    const now = new Date();
+    const fiveMinutesAgo = subMinutes(now, 5);
+    const result = formatRelativeTime(fiveMinutesAgo.toISOString());
+    expect(result).toBe("5m ago");
+  });
+
+  it("formats hours ago", () => {
+    const now = new Date();
+    const threeHoursAgo = subHours(now, 3);
+    const result = formatRelativeTime(threeHoursAgo.toISOString());
+    expect(result).toBe("3h ago");
+  });
+
+  it("formats 'yesterday' for 1 day ago", () => {
+    const now = new Date();
+    const yesterday = subDays(now, 1);
+    const result = formatRelativeTime(yesterday.toISOString());
+    expect(result).toBe("yesterday");
+  });
+
+  it("formats days ago for recent days", () => {
+    const now = new Date();
+    const threeDaysAgo = subDays(now, 3);
+    const result = formatRelativeTime(threeDaysAgo.toISOString());
+    expect(result).toBe("3d ago");
+  });
+
+  it("formats as date for times beyond 7 days", () => {
+    const tenDaysAgo = subDays(new Date(), 10);
+    const result = formatRelativeTime(tenDaysAgo.toISOString());
+    expect(result).toMatch(/^[A-Z][a-z]{2} \d{1,2}$/); // Format like "Nov 9"
+  });
+});
+
+describe("formatDate", () => {
+  it("formats date as 'MMM d, yyyy'", () => {
+    const date = "2025-11-09T12:00:00Z";
+    const result = formatDate(date);
+    expect(result).toBe("Nov 9, 2025");
+  });
+
+  it("formats different months correctly", () => {
+    const date = "2025-01-15T12:00:00Z";
+    const result = formatDate(date);
+    expect(result).toBe("Jan 15, 2025");
+  });
+
+  it("handles dates at the beginning of the year", () => {
+    const date = "2025-01-01T00:00:00Z";
+    const result = formatDate(date);
+    expect(result).toBe("Jan 1, 2025");
+  });
+
+  it("handles dates at the end of the year", () => {
+    const date = "2025-12-31T12:00:00Z";
+    const result = formatDate(date);
+    expect(result).toBe("Dec 31, 2025");
   });
 });
 
