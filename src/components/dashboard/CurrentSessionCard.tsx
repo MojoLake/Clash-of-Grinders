@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { formatDuration } from "@/lib/sessions";
+import { formatDurationWithSeconds } from "@/lib/sessions";
 import type { TimerState, TimerData } from "@/lib/types";
 
 export function CurrentSessionCard() {
@@ -103,7 +103,7 @@ export function CurrentSessionCard() {
 
       {/* Big timer display */}
       <div className="text-6xl font-mono text-center my-8">
-        {formatDuration(elapsedSeconds)}
+        {formatDurationWithSeconds(elapsedSeconds)}
       </div>
 
       {/* Control buttons */}
