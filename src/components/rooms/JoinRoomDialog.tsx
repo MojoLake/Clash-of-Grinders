@@ -59,7 +59,7 @@ export function JoinRoomDialog({ availableRooms, userRoomIds }: JoinRoomDialogPr
         {joinableRooms.length === 0 ? (
           <div className="text-center py-8 text-slate-400">
             <p>No available rooms to join.</p>
-            <p className="text-sm mt-2">You're already in all existing rooms!</p>
+            <p className="text-sm mt-2">You&apos;re already in all existing rooms!</p>
           </div>
         ) : (
           <div className="space-y-2 max-h-96 overflow-y-auto">

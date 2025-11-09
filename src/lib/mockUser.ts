@@ -1,7 +1,7 @@
-import type { User } from './types';
+import type { User } from "./types";
 
 // Mock user ID - this should match a user inserted into your Supabase profiles table
-const MOCK_USER_ID = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
+const MOCK_USER_ID = "6229270e-4abd-429c-94f7-faa9d4ed47ba";
 
 /**
  * Returns a hardcoded mock user for development.
@@ -10,9 +10,8 @@ const MOCK_USER_ID = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
 export function getCurrentUser(): User {
   return {
     id: MOCK_USER_ID,
-    displayName: 'Test User',
+    displayName: "Test User",
     avatarUrl: null,
     createdAt: new Date().toISOString(),
   };
 }
-

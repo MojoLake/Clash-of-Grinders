@@ -61,13 +61,30 @@ export function CurrentSessionCard() {
   };
 
   const handleEnd = async () => {
-    // TODO: Call API to save session when /api/sessions endpoint is implemented
-    // For now, just log the session data
-    console.log("Session ended:", {
-      durationSeconds: elapsedSeconds,
-      startedAt: new Date(Date.now() - elapsedSeconds * 1000).toISOString(),
-      endedAt: new Date().toISOString(),
-    });
+    const endedAt = new Date();
+    const startedAt = new Date(endedAt.getTime() - elapsedSeconds * 1000);
+
+    try {
+      // Save session to API
+      const response = await fetch("/api/sessions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          startedAt: startedAt.toISOString(),
+          endedAt: endedAt.toISOString(),
+          durationSeconds: elapsedSeconds,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to save session");
+      }
+
+      console.log("Session saved successfully");
+    } catch (error) {
+      console.error("Error saving session:", error);
+      // Continue with reset even if API call fails
+    }
 
     // Reset state
     setTimerState("idle");

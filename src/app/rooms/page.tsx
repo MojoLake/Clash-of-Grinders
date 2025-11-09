@@ -1,17 +1,17 @@
-import { AppShell } from '@/components/layout/AppShell';
-import { TopBar } from '@/components/layout/TopBar';
-import { RoomCard } from '@/components/rooms/RoomCard';
-import { CreateRoomDialog } from '@/components/rooms/CreateRoomDialog';
-import { JoinRoomDialog } from '@/components/rooms/JoinRoomDialog';
-import { getUserRooms, getAllRooms } from '@/lib/rooms';
-import { getCurrentUser } from '@/lib/mockUser';
-import Link from 'next/link';
+import { AppShell } from "@/components/layout/AppShell";
+import { TopBar } from "@/components/layout/TopBar";
+import { RoomCard } from "@/components/rooms/RoomCard";
+import { CreateRoomDialog } from "@/components/rooms/CreateRoomDialog";
+import { JoinRoomDialog } from "@/components/rooms/JoinRoomDialog";
+import { getUserRooms, getAllRooms } from "@/lib/rooms";
+import { getCurrentUser } from "@/lib/mockUser";
+import Link from "next/link";
 
 export default function RoomsPage() {
   const user = getCurrentUser();
   const userRooms = getUserRooms(user.id);
   const allRooms = getAllRooms();
-  
+
   return (
     <AppShell>
       <TopBar title="Rooms" />
@@ -20,9 +20,9 @@ export default function RoomsPage() {
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">Your Rooms</h1>
           <div className="flex gap-2">
-            <JoinRoomDialog 
-              availableRooms={allRooms} 
-              userRoomIds={userRooms.map(r => r.id)}
+            <JoinRoomDialog
+              availableRooms={allRooms}
+              userRoomIds={userRooms.map((r) => r.id)}
             />
             <CreateRoomDialog />
           </div>
@@ -31,13 +31,14 @@ export default function RoomsPage() {
         {/* Empty State */}
         {userRooms.length === 0 && (
           <div className="text-center py-20 text-slate-400">
-            <p className="text-xl mb-4">You haven't joined any rooms yet.</p>
-            <p className="text-sm mb-6">Create a new room or join an existing one to get started.</p>
+            <p className="text-xl mb-4">
+              You haven&apos;t joined any rooms yet.
+            </p>
+            <p className="text-sm mb-6">
+              Create a new room or join an existing one to get started.
+            </p>
             <div className="flex gap-2 justify-center">
-              <JoinRoomDialog 
-                availableRooms={allRooms} 
-                userRoomIds={[]}
-              />
+              <JoinRoomDialog availableRooms={allRooms} userRoomIds={[]} />
               <CreateRoomDialog />
             </div>
           </div>
@@ -57,4 +58,3 @@ export default function RoomsPage() {
     </AppShell>
   );
 }
-
