@@ -114,4 +114,66 @@ export class RoomsService {
       throw new Error(`Failed to join room: ${insertError.message}`);
     }
   }
+
+  /**
+   * Removes a user from a room. If the user is the owner and sole member,
+   * the room is deleted. Owners cannot leave if other members exist.
+   * @param userId - The user's ID
+   * @param roomId - The room's ID
+   * @throws Error if user is not a member, owner tries to leave with other members, or deletion fails
+   */
+  async leaveRoom(userId: string, roomId: string): Promise<void> {
+    // Step 1: Get user's membership
+    const { data: membership, error: membershipError } = await this.supabase
+      .from("room_memberships")
+      .select("role")
+      .eq("room_id", roomId)
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (membershipError) {
+      throw new Error(`Failed to check membership: ${membershipError.message}`);
+    }
+    if (!membership) {
+      throw new Error("User is not a member of this room");
+    }
+
+    // Step 2: Handle owner case
+    if (membership.role === "owner") {
+      // Count other members
+      const { count, error: countError } = await this.supabase
+        .from("room_memberships")
+        .select("user_id", { count: "exact", head: true })
+        .eq("room_id", roomId);
+
+      if (countError) {
+        throw new Error(`Failed to count members: ${countError.message}`);
+      }
+
+      if (count !== null && count > 1) {
+        throw new Error("Room owner cannot leave while other members exist");
+      }
+
+      // Delete room (CASCADE will delete membership)
+      const { error: deleteError } = await this.supabase
+        .from("rooms")
+        .delete()
+        .eq("id", roomId);
+
+      if (deleteError) {
+        throw new Error(`Failed to delete room: ${deleteError.message}`);
+      }
+    } else {
+      // Step 3: Regular member - just delete membership
+      const { error: deleteError } = await this.supabase
+        .from("room_memberships")
+        .delete()
+        .eq("room_id", roomId)
+        .eq("user_id", userId);
+
+      if (deleteError) {
+        throw new Error(`Failed to leave room: ${deleteError.message}`);
+      }
+    }
+  }
 }
