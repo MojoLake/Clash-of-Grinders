@@ -176,4 +176,23 @@ export class RoomsService {
       }
     }
   }
+
+  /**
+   * Counts the number of members in a room.
+   * @param roomId - The room's ID
+   * @returns The number of members
+   * @throws Error if query fails
+   */
+  private async getRoomMemberCount(roomId: string): Promise<number> {
+    const { count, error } = await this.supabase
+      .from("room_memberships")
+      .select("user_id", { count: "exact", head: true })
+      .eq("room_id", roomId);
+
+    if (error) {
+      throw new Error(`Failed to count room members: ${error.message}`);
+    }
+
+    return count ?? 0;
+  }
 }
