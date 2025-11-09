@@ -8,13 +8,13 @@ vi.mock("@/lib/supabase/server", () => ({
   createClient: vi.fn(),
 }));
 
-vi.mock("@/lib/mockUser", () => ({
-  getCurrentUser: vi.fn(() => ({
-    id: "user-123",
-    displayName: "Test User",
-    avatarUrl: null,
-    createdAt: "2025-01-09T00:00:00Z",
-  })),
+vi.mock("@/lib/auth", () => ({
+  getAuthenticatedUser: vi.fn(() =>
+    Promise.resolve({
+      id: "user-123",
+      email: "test@example.com",
+    })
+  ),
 }));
 
 vi.mock("@/lib/services", () => ({
@@ -176,6 +176,29 @@ describe("POST /api/sessions", () => {
     expect(response.status).toBe(500);
     expect(json.error).toContain("Database error");
   });
+
+  it("should return 401 when user is not authenticated", async () => {
+    const { getAuthenticatedUser } = await import("@/lib/auth");
+    (getAuthenticatedUser as any).mockRejectedValueOnce(
+      new Error("Unauthorized: No authenticated user")
+    );
+    (createClient as any).mockResolvedValue({});
+
+    const request = new NextRequest("http://localhost:3000/api/sessions", {
+      method: "POST",
+      body: JSON.stringify({
+        startedAt: "2025-01-09T10:00:00Z",
+        endedAt: "2025-01-09T11:00:00Z",
+        durationSeconds: 3600,
+      }),
+    });
+
+    const response = await POST(request);
+    const json = await response.json();
+
+    expect(response.status).toBe(401);
+    expect(json.error).toContain("Unauthorized");
+  });
 });
 
 describe("GET /api/sessions", () => {
@@ -324,5 +347,23 @@ describe("GET /api/sessions", () => {
 
     expect(response.status).toBe(200);
     expect(json.sessions).toEqual([]);
+  });
+
+  it("should return 401 when user is not authenticated", async () => {
+    const { getAuthenticatedUser } = await import("@/lib/auth");
+    (getAuthenticatedUser as any).mockRejectedValueOnce(
+      new Error("Unauthorized: No authenticated user")
+    );
+    (createClient as any).mockResolvedValue({});
+
+    const request = new NextRequest("http://localhost:3000/api/sessions", {
+      method: "GET",
+    });
+
+    const response = await GET(request);
+    const json = await response.json();
+
+    expect(response.status).toBe(401);
+    expect(json.error).toContain("Unauthorized");
   });
 });

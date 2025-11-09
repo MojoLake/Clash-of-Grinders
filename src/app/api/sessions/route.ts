@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { SessionsService } from "@/lib/services";
-import { getCurrentUser } from "@/lib/mockUser";
+import { getAuthenticatedUser } from "@/lib/auth";
 import {
   validateRequired,
   validatePositiveNumber,
@@ -44,11 +44,11 @@ export async function POST(request: NextRequest) {
       return createErrorResponse(dateRangeError, 400);
     }
 
-    // Get current user (mock for now)
-    const user = getCurrentUser();
+    // Get authenticated user
+    const supabase = await createClient();
+    const user = await getAuthenticatedUser(supabase);
 
     // Create session
-    const supabase = await createClient();
     const sessionsService = new SessionsService(supabase);
 
     const sessionData: CreateSessionRequest = {
@@ -63,6 +63,12 @@ export async function POST(request: NextRequest) {
     return createSuccessResponse({ session }, 201);
   } catch (error) {
     console.error("Error creating session:", error);
+
+    // Handle authentication errors specifically
+    if (error instanceof Error && error.message.includes("Unauthorized")) {
+      return createErrorResponse(error.message, 401);
+    }
+
     return createErrorResponse(
       error instanceof Error ? error.message : "Internal server error",
       500
@@ -106,11 +112,11 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Get current user (mock for now)
-    const user = getCurrentUser();
+    // Get authenticated user
+    const supabase = await createClient();
+    const user = await getAuthenticatedUser(supabase);
 
     // Fetch sessions
-    const supabase = await createClient();
     const sessionsService = new SessionsService(supabase);
 
     const sessions = await sessionsService.getUserSessions(user.id, {
@@ -122,6 +128,12 @@ export async function GET(request: NextRequest) {
     return createSuccessResponse({ sessions }, 200);
   } catch (error) {
     console.error("Error fetching sessions:", error);
+
+    // Handle authentication errors specifically
+    if (error instanceof Error && error.message.includes("Unauthorized")) {
+      return createErrorResponse(error.message, 401);
+    }
+
     return createErrorResponse(
       error instanceof Error ? error.message : "Internal server error",
       500
