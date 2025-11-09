@@ -28,47 +28,58 @@
 --   }'
 
 -- ============================================================================
--- Test Data (uncomment and update with real user IDs)
+-- Test Data with Real User UUID
+-- ============================================================================
+-- 
+-- ⚠️  IMPORTANT: This seed data requires a user to exist first!
+-- ⚠️  Running `supabase db reset` wipes auth.users, so use the helper script:
+-- 
+--     ./scripts/reset-with-seed.sh
+-- 
+-- This script will:
+--   1. Reset the database
+--   2. Create a test user via Auth API
+--   3. Insert seed data with the actual user ID
+-- 
+-- Alternatively, create a user manually and update the UUID below.
 -- ============================================================================
 
--- Example: Create a test room
--- Replace 'REAL_USER_UUID_HERE' with an actual UUID from auth.users
--- 
--- INSERT INTO rooms (name, description, created_by)
--- VALUES (
---   'Morning Grinders',
---   'Early bird study group',
---   'REAL_USER_UUID_HERE'
--- );
+-- Note: Commented out because auth user must exist first
+-- Use scripts/reset-with-seed.sh instead
 
--- INSERT INTO rooms (name, description, created_by)
--- VALUES (
---   'Night Owls',
---   'Late night coding sessions',
---   'REAL_USER_UUID_HERE'
--- );
-
--- Example: Add room membership
+-- DO $$
+-- DECLARE
+--   test_user_id UUID := '6229270e-4abd-429c-94f7-faa9d4ed47ba';
+--   morning_room_id UUID;
+--   night_room_id UUID;
+-- BEGIN
+--   -- Create test rooms
+--   INSERT INTO rooms (name, description, created_by)
+--   VALUES ('Morning Grinders', 'Early bird study group', test_user_id)
+--   RETURNING id INTO morning_room_id;
 -- 
--- INSERT INTO room_memberships (room_id, user_id, role)
--- SELECT 
---   r.id,
---   'REAL_USER_UUID_HERE',
---   'owner'
--- FROM rooms r
--- WHERE r.name = 'Morning Grinders';
-
--- Example: Create a test session
+--   INSERT INTO rooms (name, description, created_by)
+--   VALUES ('Night Owls', 'Late night coding sessions', test_user_id)
+--   RETURNING id INTO night_room_id;
 -- 
--- INSERT INTO sessions (user_id, room_id, started_at, ended_at, duration_seconds)
--- SELECT
---   'REAL_USER_UUID_HERE',
---   r.id,
---   NOW() - INTERVAL '2 hours',
---   NOW() - INTERVAL '30 minutes',
---   5400  -- 90 minutes in seconds
--- FROM rooms r
--- WHERE r.name = 'Morning Grinders';
+--   -- Add room memberships
+--   INSERT INTO room_memberships (room_id, user_id, role)
+--   VALUES 
+--     (morning_room_id, test_user_id, 'owner'),
+--     (night_room_id, test_user_id, 'owner');
+-- 
+--   -- Create a sample session
+--   INSERT INTO sessions (user_id, room_id, started_at, ended_at, duration_seconds)
+--   VALUES (
+--     test_user_id,
+--     morning_room_id,
+--     NOW() - INTERVAL '2 hours',
+--     NOW() - INTERVAL '30 minutes',
+--     5400  -- 90 minutes
+--   );
+-- 
+--   RAISE NOTICE 'Seed data created successfully for user %', test_user_id;
+-- END $$;
 
 -- ============================================================================
 -- Development Tips

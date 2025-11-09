@@ -9,8 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export default function DevLoginPage() {
-  const [email, setEmail] = useState("test@example.com");
-  const [password, setPassword] = useState("1234");
+  const [email, setEmail] = useState("test@local.dev");
+  const [password, setPassword] = useState("test1234");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
@@ -104,9 +104,9 @@ export default function DevLoginPage() {
             Default Credentials:
           </p>
           <p className="text-xs text-muted-foreground">
-            Email: test@example.com
+            Email: test@local.dev
             <br />
-            Password: password123
+            Password: test1234
           </p>
         </div>
       </Card>
