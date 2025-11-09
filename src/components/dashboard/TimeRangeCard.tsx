@@ -5,11 +5,12 @@ import { Card } from "@/components/ui/card";
 import { formatDuration } from "@/lib/sessions";
 import type { Session, TimerData } from "@/lib/types";
 
-interface TodayCardProps {
+interface TimeRangeCardProps {
   sessions: Session[];
+  label: string;
 }
 
-export function TodayCard({ sessions }: TodayCardProps) {
+export function TimeRangeCard({ sessions, label }: TimeRangeCardProps) {
   const [currentSessionSeconds, setCurrentSessionSeconds] = useState(0);
 
   // Calculate total seconds from completed sessions
@@ -58,7 +59,7 @@ export function TodayCard({ sessions }: TodayCardProps) {
 
   return (
     <Card className="p-4">
-      <div className="text-sm text-slate-400 mb-2">Today</div>
+      <div className="text-sm text-slate-400 mb-2">{label}</div>
       <div className="text-3xl font-bold">{formatDuration(totalSeconds)}</div>
     </Card>
   );

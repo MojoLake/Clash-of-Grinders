@@ -2,8 +2,12 @@ import { AppShell } from "@/components/layout/AppShell";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CurrentSessionCard } from "@/components/dashboard/CurrentSessionCard";
-import { TodayCard } from "@/components/dashboard/TodayCard";
-import { formatDuration, getTodayDateRange } from "@/lib/sessions";
+import { TimeRangeCard } from "@/components/dashboard/TimeRangeCard";
+import {
+  formatDuration,
+  getTodayDateRange,
+  getThisWeekDateRange,
+} from "@/lib/sessions";
 import type { Session } from "@/lib/types";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
@@ -50,10 +54,33 @@ async function fetchTodaySessions(): Promise<Session[]> {
   }
 }
 
+async function fetchThisWeekSessions(): Promise<Session[]> {
+  try {
+    const supabase = await createClient();
+    const user = await getCurrentUser(supabase);
+
+    if (!user) {
+      console.warn("No user found in fetchThisWeekSessions");
+      return [];
+    }
+
+    const { start, end } = getThisWeekDateRange();
+    const sessionsService = new SessionsService(supabase);
+    return await sessionsService.getUserSessions(user.id, {
+      startDate: start,
+      endDate: end,
+    });
+  } catch (error) {
+    console.error("Error fetching this week's sessions:", error);
+    return [];
+  }
+}
+
 export default async function DashboardPage() {
-  const [recentSessions, todaySessions] = await Promise.all([
+  const [recentSessions, todaySessions, thisWeekSessions] = await Promise.all([
     fetchRecentSessions(),
     fetchTodaySessions(),
+    fetchThisWeekSessions(),
   ]);
 
   return (
@@ -64,8 +91,8 @@ export default async function DashboardPage() {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <TodayCard sessions={todaySessions} />
-          <StatCardPlaceholder label="This Week" value="15h 20m" />
+          <TimeRangeCard sessions={todaySessions} label="Today" />
+          <TimeRangeCard sessions={thisWeekSessions} label="This Week" />
           <StatCardPlaceholder label="Streak" value="5 days" />
         </div>
 

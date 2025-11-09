@@ -1,14 +1,11 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
-import { TodayCard } from "./TodayCard";
+import { TimeRangeCard } from "./TimeRangeCard";
 import type { Session, TimerData } from "@/lib/types";
 
-describe("TodayCard", () => {
+describe("TimeRangeCard", () => {
   // Helper to create mock sessions
-  const createSession = (
-    id: string,
-    durationSeconds: number
-  ): Session => ({
+  const createSession = (id: string, durationSeconds: number): Session => ({
     id,
     userId: "user-1",
     roomId: null,
@@ -32,14 +29,20 @@ describe("TodayCard", () => {
   });
 
   describe("rendering", () => {
-    it("renders the card with 'Today' label", () => {
-      render(<TodayCard sessions={[]} />);
+    it("renders the card with custom label", () => {
+      render(<TimeRangeCard sessions={[]} label="Today" />);
 
       expect(screen.getByText("Today")).toBeInTheDocument();
     });
 
+    it("renders the card with 'This Week' label", () => {
+      render(<TimeRangeCard sessions={[]} label="This Week" />);
+
+      expect(screen.getByText("This Week")).toBeInTheDocument();
+    });
+
     it("displays 0s when there are no sessions", () => {
-      render(<TodayCard sessions={[]} />);
+      render(<TimeRangeCard sessions={[]} label="Today" />);
 
       expect(screen.getByText("0s")).toBeInTheDocument();
     });
@@ -47,7 +50,7 @@ describe("TodayCard", () => {
     it("displays formatted duration for single session", () => {
       const sessions = [createSession("s1", 3600)]; // 1 hour
 
-      render(<TodayCard sessions={sessions} />);
+      render(<TimeRangeCard sessions={sessions} label="Today" />);
 
       expect(screen.getByText("1h")).toBeInTheDocument();
     });
@@ -58,7 +61,7 @@ describe("TodayCard", () => {
         createSession("s2", 5400), // 1 hour 30 minutes
       ];
 
-      render(<TodayCard sessions={sessions} />);
+      render(<TimeRangeCard sessions={sessions} label="Today" />);
 
       expect(screen.getByText("2h 30m")).toBeInTheDocument();
     });
@@ -66,7 +69,7 @@ describe("TodayCard", () => {
     it("formats minutes correctly", () => {
       const sessions = [createSession("s1", 2700)]; // 45 minutes
 
-      render(<TodayCard sessions={sessions} />);
+      render(<TimeRangeCard sessions={sessions} label="Today" />);
 
       expect(screen.getByText("45m")).toBeInTheDocument();
     });
@@ -74,7 +77,7 @@ describe("TodayCard", () => {
     it("formats seconds correctly for short durations", () => {
       const sessions = [createSession("s1", 45)]; // 45 seconds
 
-      render(<TodayCard sessions={sessions} />);
+      render(<TimeRangeCard sessions={sessions} label="Today" />);
 
       expect(screen.getByText("45s")).toBeInTheDocument();
     });
@@ -92,7 +95,7 @@ describe("TodayCard", () => {
 
       localStorage.setItem("currentSession", JSON.stringify(currentSession));
 
-      render(<TodayCard sessions={sessions} />);
+      render(<TimeRangeCard sessions={sessions} label="Today" />);
 
       // Should show 1h + 30m = 1h 30m
       expect(screen.getByText("1h 30m")).toBeInTheDocument();
@@ -109,7 +112,7 @@ describe("TodayCard", () => {
 
       localStorage.setItem("currentSession", JSON.stringify(currentSession));
 
-      render(<TodayCard sessions={sessions} />);
+      render(<TimeRangeCard sessions={sessions} label="Today" />);
 
       // Should show 1h + 10m = 1h 10m
       expect(screen.getByText("1h 10m")).toBeInTheDocument();
@@ -126,7 +129,7 @@ describe("TodayCard", () => {
 
       localStorage.setItem("currentSession", JSON.stringify(currentSession));
 
-      render(<TodayCard sessions={sessions} />);
+      render(<TimeRangeCard sessions={sessions} label="Today" />);
 
       // Should only show completed session: 1h
       expect(screen.getByText("1h")).toBeInTheDocument();
@@ -135,7 +138,7 @@ describe("TodayCard", () => {
     it("handles missing localStorage data", () => {
       const sessions = [createSession("s1", 3600)]; // 1 hour completed
 
-      render(<TodayCard sessions={sessions} />);
+      render(<TimeRangeCard sessions={sessions} label="Today" />);
 
       // Should show only completed sessions
       expect(screen.getByText("1h")).toBeInTheDocument();
@@ -147,7 +150,7 @@ describe("TodayCard", () => {
       localStorage.setItem("currentSession", "invalid json {");
 
       // Should not throw error
-      render(<TodayCard sessions={sessions} />);
+      render(<TimeRangeCard sessions={sessions} label="Today" />);
 
       // Should show only completed sessions
       expect(screen.getByText("1h")).toBeInTheDocument();
@@ -159,7 +162,7 @@ describe("TodayCard", () => {
       // Missing required fields
       localStorage.setItem("currentSession", JSON.stringify({ invalid: true }));
 
-      render(<TodayCard sessions={sessions} />);
+      render(<TimeRangeCard sessions={sessions} label="Today" />);
 
       // Should show only completed sessions
       expect(screen.getByText("1h")).toBeInTheDocument();
@@ -179,7 +182,7 @@ describe("TodayCard", () => {
 
       localStorage.setItem("currentSession", JSON.stringify(currentSession));
 
-      render(<TodayCard sessions={sessions} />);
+      render(<TimeRangeCard sessions={sessions} label="Today" />);
 
       // Should show completed + current immediately
       expect(screen.getByText("1h 10m")).toBeInTheDocument();
@@ -189,7 +192,9 @@ describe("TodayCard", () => {
       const sessions = [createSession("s1", 3600)]; // 1 hour completed
 
       // First render without current session
-      const { unmount } = render(<TodayCard sessions={sessions} />);
+      const { unmount } = render(
+        <TimeRangeCard sessions={sessions} label="Today" />
+      );
       expect(screen.getByText("1h")).toBeInTheDocument();
       unmount();
 
@@ -203,7 +208,7 @@ describe("TodayCard", () => {
       localStorage.setItem("currentSession", JSON.stringify(currentSession));
 
       // Re-render component
-      render(<TodayCard sessions={sessions} />);
+      render(<TimeRangeCard sessions={sessions} label="Today" />);
 
       // Should now include current session
       expect(screen.getByText("1h 30m")).toBeInTheDocument();
@@ -220,7 +225,9 @@ describe("TodayCard", () => {
       };
 
       localStorage.setItem("currentSession", JSON.stringify(runningSession));
-      const { unmount } = render(<TodayCard sessions={sessions} />);
+      const { unmount } = render(
+        <TimeRangeCard sessions={sessions} label="Today" />
+      );
       expect(screen.getByText("1h 10m")).toBeInTheDocument();
       unmount();
 
@@ -234,7 +241,7 @@ describe("TodayCard", () => {
       localStorage.setItem("currentSession", JSON.stringify(idleSession));
 
       // Re-render
-      render(<TodayCard sessions={sessions} />);
+      render(<TimeRangeCard sessions={sessions} label="Today" />);
 
       // Should only show completed sessions
       expect(screen.getByText("1h")).toBeInTheDocument();
@@ -245,13 +252,13 @@ describe("TodayCard", () => {
     it("handles very large durations", () => {
       const sessions = [createSession("s1", 86400)]; // 24 hours
 
-      render(<TodayCard sessions={sessions} />);
+      render(<TimeRangeCard sessions={sessions} label="This Week" />);
 
       expect(screen.getByText("24h")).toBeInTheDocument();
     });
 
     it("handles empty sessions array with no localStorage", () => {
-      render(<TodayCard sessions={[]} />);
+      render(<TimeRangeCard sessions={[]} label="This Week" />);
 
       expect(screen.getByText("0s")).toBeInTheDocument();
     });
@@ -265,7 +272,7 @@ describe("TodayCard", () => {
         createSession("s5", 600), // 10 minutes
       ];
 
-      render(<TodayCard sessions={sessions} />);
+      render(<TimeRangeCard sessions={sessions} label="This Week" />);
 
       expect(screen.getByText("50m")).toBeInTheDocument();
     });
@@ -276,10 +283,26 @@ describe("TodayCard", () => {
         createSession("s2", 3600), // 1 hour
       ];
 
-      render(<TodayCard sessions={sessions} />);
+      render(<TimeRangeCard sessions={sessions} label="Today" />);
 
       expect(screen.getByText("1h")).toBeInTheDocument();
     });
   });
-});
 
+  describe("label customization", () => {
+    it("works with any custom label", () => {
+      render(<TimeRangeCard sessions={[]} label="Custom Period" />);
+
+      expect(screen.getByText("Custom Period")).toBeInTheDocument();
+    });
+
+    it("displays correct data regardless of label", () => {
+      const sessions = [createSession("s1", 7200)]; // 2 hours
+
+      render(<TimeRangeCard sessions={sessions} label="This Month" />);
+
+      expect(screen.getByText("This Month")).toBeInTheDocument();
+      expect(screen.getByText("2h")).toBeInTheDocument();
+    });
+  });
+});

@@ -212,3 +212,19 @@ export function getTodayDateRange(): { start: string; end: string } {
     end: dayEnd.toISOString(),
   };
 }
+
+/**
+ * Get this week's date range (Monday to next Monday) in ISO format for queries
+ * Uses the user's local timezone, week starts on Monday
+ */
+export function getThisWeekDateRange(): { start: string; end: string } {
+  const now = new Date();
+  const weekStart = startOfWeek(now, { weekStartsOn: 1 }); // Monday
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekEnd.getDate() + 7);
+
+  return {
+    start: weekStart.toISOString(),
+    end: weekEnd.toISOString(),
+  };
+}
