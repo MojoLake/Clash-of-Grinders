@@ -1,53 +1,58 @@
 "use client";
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import type { Room } from '@/lib/types';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
-interface JoinRoomDialogProps {
-  availableRooms: Room[];
-  userRoomIds: string[];
-}
-
-export function JoinRoomDialog({ availableRooms, userRoomIds }: JoinRoomDialogProps) {
+export function JoinRoomDialog() {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [roomId, setRoomId] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   
-  // Filter out rooms user is already in
-  const joinableRooms = availableRooms.filter(room => !userRoomIds.includes(room.id));
+  const handleOpenChange = (newOpen: boolean) => {
+    setOpen(newOpen);
+    if (!newOpen) {
+      // Reset form when dialog closes
+      setRoomId('');
+      setError(null);
+    }
+  };
   
-  const handleJoinRoom = async (roomId: string) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setIsSubmitting(true);
+    setError(null);
     
     try {
-      // TODO: Backend implementation pending
-      // This endpoint doesn't exist yet but is ready for integration
-      const response = await fetch('/api/rooms/join', {
+      const response = await fetch(`/api/rooms/${roomId}/join`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ roomId }),
       });
       
       if (response.ok) {
         setOpen(false);
+        setRoomId('');
+        setError(null);
         // Refresh page to show joined room
-        window.location.reload();
+        router.refresh();
       } else {
-        console.error('Failed to join room:', await response.text());
+        const errorData = await response.json();
+        setError(errorData.error || 'Failed to join room');
       }
     } catch (error) {
-      // Expected to fail until backend is implemented
-      console.log('Join room request (backend pending):', { roomId });
-      console.error('API call failed (expected until backend is implemented):', error);
+      setError(error instanceof Error ? error.message : 'Failed to join room');
     }
     
     setIsSubmitting(false);
   };
   
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button variant="outline">Join Room</Button>
       </DialogTrigger>
@@ -55,39 +60,29 @@ export function JoinRoomDialog({ availableRooms, userRoomIds }: JoinRoomDialogPr
         <DialogHeader>
           <DialogTitle>Join a Room</DialogTitle>
         </DialogHeader>
-        
-        {joinableRooms.length === 0 ? (
-          <div className="text-center py-8 text-slate-400">
-            <p>No available rooms to join.</p>
-            <p className="text-sm mt-2">You&apos;re already in all existing rooms!</p>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <Label htmlFor="roomId">Room ID</Label>
+            <Input
+              id="roomId"
+              value={roomId}
+              onChange={(e) => setRoomId(e.target.value)}
+              required
+              placeholder="e.g. 550e8400-e29b-41d4-a716-446655440000"
+            />
+            <p className="text-sm text-slate-400 mt-1">
+              Ask the room owner for the room ID to join
+            </p>
           </div>
-        ) : (
-          <div className="space-y-2 max-h-96 overflow-y-auto">
-            {joinableRooms.map((room) => (
-              <div
-                key={room.id}
-                className="p-4 border border-slate-700 rounded-lg hover:bg-slate-800 transition cursor-pointer"
-                onClick={() => handleJoinRoom(room.id)}
-              >
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h4 className="font-bold">{room.name}</h4>
-                    {room.description && (
-                      <p className="text-sm text-slate-400 mt-1">{room.description}</p>
-                    )}
-                  </div>
-                  <Badge variant="secondary">Join</Badge>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-        
-        {isSubmitting && (
-          <div className="text-center text-sm text-slate-400">
-            Joining room...
-          </div>
-        )}
+          {error && (
+            <div className="text-sm text-red-400 bg-red-950/20 border border-red-900 rounded-lg p-3">
+              {error}
+            </div>
+          )}
+          <Button type="submit" disabled={isSubmitting || !roomId} className="w-full">
+            {isSubmitting ? 'Joining...' : 'Join'}
+          </Button>
+        </form>
       </DialogContent>
     </Dialog>
   );

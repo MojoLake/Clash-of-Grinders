@@ -35,10 +35,7 @@ export default async function RoomsPage() {
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">Your Rooms</h1>
           <div className="flex gap-2">
-            <JoinRoomDialog
-              availableRooms={[]}
-              userRoomIds={userRooms.map((r) => r.id)}
-            />
+            <JoinRoomDialog />
             <CreateRoomDialog />
           </div>
         </div>
@@ -53,7 +50,7 @@ export default async function RoomsPage() {
               Create a new room or join an existing one to get started.
             </p>
             <div className="flex gap-2 justify-center">
-              <JoinRoomDialog availableRooms={[]} userRoomIds={[]} />
+              <JoinRoomDialog />
               <CreateRoomDialog />
             </div>
           </div>
