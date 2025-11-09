@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Room, DbRoom, CreateRoomRequest } from "@/lib/types";
+import type { Room, DbRoom, CreateRoomRequest, RoomStats } from "@/lib/types";
 import { dbRoomToRoom } from "@/lib/types";
 
 export class RoomsService {
@@ -194,5 +194,53 @@ export class RoomsService {
     }
 
     return count ?? 0;
+  }
+
+  /**
+   * Calculates aggregated statistics for a room.
+   * @param roomId - The room's ID
+   * @returns Statistics object with totals and averages
+   * @throws Error if query fails
+   */
+  private async getRoomStats(roomId: string): Promise<RoomStats> {
+    // Fetch all sessions for the room
+    const { data: sessions, error } = await this.supabase
+      .from("sessions")
+      .select("duration_seconds, user_id, started_at")
+      .eq("room_id", roomId);
+
+    if (error) {
+      throw new Error(`Failed to fetch room sessions: ${error.message}`);
+    }
+
+    // Calculate totals
+    const totalSeconds =
+      sessions?.reduce((sum, session) => sum + session.duration_seconds, 0) ??
+      0;
+    const totalHours = totalSeconds / 3600;
+    const totalSessions = sessions?.length ?? 0;
+
+    // Calculate active today (unique users with sessions starting today)
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const todayIso = todayStart.toISOString();
+
+    const activeUserIds = new Set(
+      sessions
+        ?.filter((session) => session.started_at >= todayIso)
+        .map((session) => session.user_id) ?? []
+    );
+    const activeToday = activeUserIds.size;
+
+    // Calculate average hours per member
+    const memberCount = await this.getRoomMemberCount(roomId);
+    const avgHoursPerMember = memberCount > 0 ? totalHours / memberCount : 0;
+
+    return {
+      totalHours,
+      totalSessions,
+      activeToday,
+      avgHoursPerMember,
+    };
   }
 }
