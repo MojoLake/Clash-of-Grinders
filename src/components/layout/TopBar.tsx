@@ -1,20 +1,29 @@
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { getCurrentUser } from '@/lib/mockUser';
+import { createClient } from '@/lib/supabase/server';
+import { getCurrentUser } from '@/lib/auth';
+import { UserMenu } from './UserMenu';
 
 interface TopBarProps {
   title?: string;
 }
 
-export function TopBar({ title }: TopBarProps) {
-  const user = getCurrentUser();
+export async function TopBar({ title }: TopBarProps) {
+  const supabase = await createClient();
+  const user = await getCurrentUser(supabase);
+
+  // Defensive: Should not happen due to middleware, but handle gracefully
+  if (!user) {
+    return null;
+  }
+
+  // Fetch profile data for display name
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('display_name, avatar_url')
+    .eq('id', user.id)
+    .single();
+
+  const displayName = profile?.display_name || user.email?.split('@')[0] || 'User';
+  const avatarUrl = profile?.avatar_url || null;
 
   return (
     <div className="h-16 border-b border-slate-800 bg-slate-900 px-6 flex items-center justify-between">
@@ -24,31 +33,7 @@ export function TopBar({ title }: TopBarProps) {
       </div>
 
       {/* User menu */}
-      <DropdownMenu>
-        <DropdownMenuTrigger className="focus:outline-none">
-          <div className="flex items-center gap-3 hover:opacity-80 transition">
-            <span className="text-sm font-medium hidden sm:block">
-              {user.displayName}
-            </span>
-            <Avatar>
-              <AvatarImage src={user.avatarUrl || undefined} />
-              <AvatarFallback>
-                {user.displayName.slice(0, 2).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-          </div>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-56">
-          <DropdownMenuLabel>My Account</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem>Profile</DropdownMenuItem>
-          <DropdownMenuItem>Settings</DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem className="text-red-500">
-            Logout
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <UserMenu displayName={displayName} avatarUrl={avatarUrl} />
     </div>
   );
 }
