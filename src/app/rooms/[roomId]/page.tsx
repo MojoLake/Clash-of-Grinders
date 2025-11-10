@@ -3,7 +3,7 @@ import { RoomHeader } from "@/components/rooms/RoomHeader";
 import { RoomStatsCard } from "@/components/rooms/RoomStatsCard";
 import { LeaderboardSection } from "@/components/rooms/LeaderboardSection";
 import { MembersSection } from "@/components/rooms/MembersSection";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
 import { RoomsService } from "@/lib/services/rooms.service";
 import { LeaderboardService } from "@/lib/services/leaderboard.service";
@@ -36,7 +36,6 @@ export default async function RoomDetailPage({
 
   // Instantiate services
   const roomsService = new RoomsService(supabase);
-  const leaderboardService = new LeaderboardService(supabase);
 
   // Check membership first
   const isMember = await roomsService.isUserMember(user.id, roomId);
@@ -60,6 +59,10 @@ export default async function RoomDetailPage({
   )
     ? (periodParam as LeaderboardPeriod)
     : "week";
+
+  // Use admin client for leaderboard to bypass RLS after membership verification
+  const adminClient = await createAdminClient();
+  const leaderboardService = new LeaderboardService(adminClient);
 
   // Fetch leaderboard
   const leaderboard = await leaderboardService.computeLeaderboard(
