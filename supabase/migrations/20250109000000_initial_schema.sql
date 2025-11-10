@@ -61,32 +61,66 @@ CREATE POLICY "Rooms are viewable by members"
 
 CREATE POLICY "Authenticated users can create rooms"
   ON rooms FOR INSERT
-  WITH CHECK (auth.uid() IS NOT NULL);
+  WITH CHECK (auth.uid() = created_by);
 
 -- Enable RLS for room_memberships
 ALTER TABLE room_memberships ENABLE ROW LEVEL SECURITY;
 
--- Room memberships policies
-CREATE POLICY "Memberships viewable by room members"
+-- Create security definer functions to avoid infinite recursion in RLS policies
+CREATE OR REPLACE FUNCTION user_is_room_member(check_room_id UUID, check_user_id UUID)
+RETURNS BOOLEAN AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1 FROM room_memberships
+    WHERE room_id = check_room_id
+      AND user_id = check_user_id
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION user_is_room_admin(check_room_id UUID, check_user_id UUID)
+RETURNS BOOLEAN AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1 FROM room_memberships
+    WHERE room_id = check_room_id
+      AND user_id = check_user_id
+      AND role IN ('owner', 'admin')
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Room memberships policies (non-recursive using security definer functions)
+CREATE POLICY "Users can view their own memberships"
   ON room_memberships FOR SELECT
-  USING (
+  USING (user_id = auth.uid());
+
+CREATE POLICY "Users can view memberships of rooms they belong to"
+  ON room_memberships FOR SELECT
+  USING (user_is_room_member(room_id, auth.uid()));
+
+CREATE POLICY "Room creators can add themselves as members"
+  ON room_memberships FOR INSERT
+  WITH CHECK (
+    user_id = auth.uid() AND
     EXISTS (
-      SELECT 1 FROM room_memberships rm
-      WHERE rm.room_id = room_memberships.room_id
-        AND rm.user_id = auth.uid()
+      SELECT 1 FROM rooms
+      WHERE rooms.id = room_id
+        AND rooms.created_by = auth.uid()
     )
   );
 
-CREATE POLICY "Room owners can manage memberships"
-  ON room_memberships FOR ALL
-  USING (
-    EXISTS (
-      SELECT 1 FROM room_memberships rm
-      WHERE rm.room_id = room_memberships.room_id
-        AND rm.user_id = auth.uid()
-        AND rm.role IN ('owner', 'admin')
-    )
-  );
+CREATE POLICY "Room admins can insert memberships"
+  ON room_memberships FOR INSERT
+  WITH CHECK (user_is_room_admin(room_id, auth.uid()));
+
+CREATE POLICY "Room admins can update memberships"
+  ON room_memberships FOR UPDATE
+  USING (user_is_room_admin(room_id, auth.uid()));
+
+CREATE POLICY "Room admins can delete memberships"
+  ON room_memberships FOR DELETE
+  USING (user_is_room_admin(room_id, auth.uid()));
 
 -- Create sessions table
 CREATE TABLE sessions (

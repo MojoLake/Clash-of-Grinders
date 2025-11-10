@@ -50,7 +50,22 @@ export async function POST(request: NextRequest) {
     const user = await getAuthenticatedUser(supabase);
 
     console.log("User ID", user.id);
-    console.log("HABLABALBA");
+    console.log("User.email", user.email);
+
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    console.log("Session", session);
+    console.log("token", session?.access_token);
+
+    const { data: profileCheck, error: profileError } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("id", user.id)
+      .single();
+
+    console.log("Profile check", profileCheck);
+    console.log("Profile error", profileError);
 
     // Create room
     const roomsService = new RoomsService(supabase);

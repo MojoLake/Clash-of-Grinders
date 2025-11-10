@@ -30,10 +30,7 @@ export async function DELETE(
     // Call leaveRoom service method
     await roomsService.leaveRoom(user.id, roomId);
 
-    return createSuccessResponse(
-      { message: "Successfully left room" },
-      200
-    );
+    return createSuccessResponse({ message: "Successfully left room" }, 200);
   } catch (error) {
     console.error("Error leaving room:", error);
 
@@ -64,4 +61,3 @@ export async function DELETE(
     );
   }
 }
-

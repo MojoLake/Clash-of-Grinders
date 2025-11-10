@@ -29,10 +29,7 @@ export async function POST(
     // Call joinRoom service method
     await roomsService.joinRoom(user.id, roomId);
 
-    return createSuccessResponse(
-      { message: "Successfully joined room" },
-      200
-    );
+    return createSuccessResponse({ message: "Successfully joined room" }, 200);
   } catch (error) {
     console.error("Error joining room:", error);
 
@@ -60,4 +57,3 @@ export async function POST(
     );
   }
 }
-
