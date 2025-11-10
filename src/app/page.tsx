@@ -1,8 +1,13 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Timer, Users, Flame } from "lucide-react";
+import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth";
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  const supabase = await createClient();
+  const user = await getCurrentUser(supabase);
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-950 to-slate-900">
       {/* Hero Section */}
@@ -16,16 +21,33 @@ export default function LandingPage() {
             accountability through leaderboards.
           </p>
           <div className="flex gap-4 justify-center">
-            <Link href="/dashboard">
-              <Button size="lg" className="text-lg">
-                Go to Dashboard
-              </Button>
-            </Link>
-            <Link href="/rooms">
-              <Button size="lg" variant="outline" className="text-lg">
-                Browse Rooms
-              </Button>
-            </Link>
+            {user ? (
+              <>
+                <Link href="/dashboard">
+                  <Button size="lg" className="text-lg">
+                    Go to Dashboard
+                  </Button>
+                </Link>
+                <Link href="/rooms">
+                  <Button size="lg" variant="outline" className="text-lg">
+                    Browse Rooms
+                  </Button>
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link href="/signup">
+                  <Button size="lg" className="text-lg">
+                    Get Started
+                  </Button>
+                </Link>
+                <Link href="/login">
+                  <Button size="lg" variant="outline" className="text-lg">
+                    Log In
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </div>

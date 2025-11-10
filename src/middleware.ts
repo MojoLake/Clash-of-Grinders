@@ -31,7 +31,9 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   // Define route categories
-  const isAuthRoute = request.nextUrl.pathname === "/dev-login";
+  const isAuthRoute =
+    request.nextUrl.pathname === "/login" ||
+    request.nextUrl.pathname === "/signup";
   const isProtectedRoute =
     !isAuthRoute &&
     request.nextUrl.pathname !== "/" &&
@@ -39,7 +41,7 @@ export async function middleware(request: NextRequest) {
 
   // Redirect logic
   if (!user && isProtectedRoute) {
-    return NextResponse.redirect(new URL("/dev-login", request.url));
+    return NextResponse.redirect(new URL("/login", request.url));
   }
 
   if (user && isAuthRoute) {
