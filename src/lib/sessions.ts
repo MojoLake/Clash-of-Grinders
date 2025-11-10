@@ -60,14 +60,13 @@ export function calculateStreak(sessions: Session[]): number {
 
   // Check consecutive days starting from today
   let streak = 0;
-  let currentDate = new Date();
+  let currentDate = startOfDay(new Date());
 
   while (true) {
     const dateKey = format(currentDate, "yyyy-MM-dd");
     if (sessionsByDate.has(dateKey)) {
       streak++;
-      currentDate = new Date(currentDate);
-      currentDate.setDate(currentDate.getDate() - 1);
+      currentDate = subDays(currentDate, 1);
     } else {
       break;
     }
