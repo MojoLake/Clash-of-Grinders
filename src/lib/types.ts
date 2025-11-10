@@ -160,6 +160,8 @@ export interface LeaderboardTableProps {
 
 export type Period = "day" | "week" | "month" | "all-time";
 
+export type LeaderboardPeriod = "day" | "week" | "month" | "all-time";
+
 export type TimerState = "idle" | "running" | "paused";
 
 export interface TimerData {
