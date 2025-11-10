@@ -8,15 +8,19 @@ import type { DbUser, LeaderboardPeriod } from "@/lib/types";
 const createMockSupabaseClient = () => {
   const mockSelect = vi.fn();
   const mockEq = vi.fn();
+  const mockIn = vi.fn();
   const mockGte = vi.fn();
   const mockLte = vi.fn();
   const mockFrom = vi.fn();
 
-  // Chain methods properly
-  mockSelect.mockReturnValue({ eq: mockEq });
-  mockEq.mockReturnValue({ gte: mockGte });
+  // Chain methods properly for sessions query (with .in())
+  mockIn.mockReturnValue({ gte: mockGte });
   mockGte.mockReturnValue({ lte: mockLte });
   mockLte.mockResolvedValue({ data: [], error: null });
+
+  // Chain methods for memberships query (with .eq())
+  mockSelect.mockReturnValue({ eq: mockEq, in: mockIn });
+  mockEq.mockReturnValue({ gte: mockGte, in: mockIn });
 
   mockFrom.mockReturnValue({
     select: mockSelect,
@@ -28,6 +32,7 @@ const createMockSupabaseClient = () => {
       from: mockFrom,
       select: mockSelect,
       eq: mockEq,
+      in: mockIn,
       gte: mockGte,
       lte: mockLte,
     },
@@ -67,7 +72,23 @@ describe("LeaderboardService", () => {
       created_at: "2025-01-01T00:00:00Z",
     };
 
+    it("should return empty array when no members exist", async () => {
+      // Mock memberships query to return empty
+      mockClient._mocks.eq.mockResolvedValue({ data: [], error: null });
+
+      const result = await service.computeLeaderboard(roomId, "week");
+
+      expect(result).toEqual([]);
+      expect(mockClient._mocks.from).toHaveBeenCalledWith("room_memberships");
+    });
+
     it("should return empty array when no sessions exist", async () => {
+      // Mock memberships query
+      mockClient._mocks.eq.mockResolvedValue({
+        data: [{ user_id: "user-1" }],
+        error: null,
+      });
+      // Mock sessions query to return empty
       mockClient._mocks.lte.mockResolvedValue({ data: [], error: null });
 
       const result = await service.computeLeaderboard(roomId, "week");
@@ -76,7 +97,13 @@ describe("LeaderboardService", () => {
       expect(mockClient._mocks.from).toHaveBeenCalledWith("sessions");
     });
 
-    it("should return empty array when data is null", async () => {
+    it("should return empty array when session data is null", async () => {
+      // Mock memberships query
+      mockClient._mocks.eq.mockResolvedValue({
+        data: [{ user_id: "user-1" }],
+        error: null,
+      });
+      // Mock sessions query to return null
       mockClient._mocks.lte.mockResolvedValue({ data: null, error: null });
 
       const result = await service.computeLeaderboard(roomId, "week");
@@ -85,6 +112,12 @@ describe("LeaderboardService", () => {
     });
 
     it("should compute leaderboard for a single user", async () => {
+      // Mock memberships query
+      mockClient._mocks.eq.mockResolvedValue({
+        data: [{ user_id: "user-1" }],
+        error: null,
+      });
+
       const mockSessions = [
         {
           duration_seconds: 3600,
@@ -123,6 +156,16 @@ describe("LeaderboardService", () => {
     });
 
     it("should compute leaderboard for multiple users sorted correctly", async () => {
+      // Mock memberships query
+      mockClient._mocks.eq.mockResolvedValue({
+        data: [
+          { user_id: "user-1" },
+          { user_id: "user-2" },
+          { user_id: "user-3" },
+        ],
+        error: null,
+      });
+
       const mockSessions = [
         {
           duration_seconds: 3600,
@@ -168,6 +211,12 @@ describe("LeaderboardService", () => {
     });
 
     it("should handle tie in total seconds using lastActiveAt as tiebreaker", async () => {
+      // Mock memberships query
+      mockClient._mocks.eq.mockResolvedValue({
+        data: [{ user_id: "user-1" }, { user_id: "user-2" }],
+        error: null,
+      });
+
       const mockSessions = [
         {
           duration_seconds: 3600,
@@ -203,6 +252,12 @@ describe("LeaderboardService", () => {
     });
 
     it("should aggregate multiple sessions per user correctly", async () => {
+      // Mock memberships query
+      mockClient._mocks.eq.mockResolvedValue({
+        data: [{ user_id: "user-1" }],
+        error: null,
+      });
+
       const mockSessions = [
         {
           duration_seconds: 3600,
@@ -236,7 +291,24 @@ describe("LeaderboardService", () => {
       expect(result[0].lastActiveAt).toBe("2025-01-09T14:00:00Z"); // Most recent
     });
 
-    it("should throw error when Supabase returns an error", async () => {
+    it("should throw error when fetching memberships fails", async () => {
+      mockClient._mocks.eq.mockResolvedValue({
+        data: null,
+        error: { message: "Database error" },
+      });
+
+      await expect(
+        service.computeLeaderboard(roomId, "week")
+      ).rejects.toThrow("Failed to fetch room members: Database error");
+    });
+
+    it("should throw error when fetching sessions fails", async () => {
+      // Mock memberships query successfully
+      mockClient._mocks.eq.mockResolvedValue({
+        data: [{ user_id: "user-1" }],
+        error: null,
+      });
+      // Mock sessions query with error
       mockClient._mocks.lte.mockResolvedValue({
         data: null,
         error: { message: "Database error" },
@@ -248,6 +320,11 @@ describe("LeaderboardService", () => {
     });
 
     it("should use correct date range for different periods", async () => {
+      // Mock memberships query for all calls
+      mockClient._mocks.eq.mockResolvedValue({
+        data: [{ user_id: "user-1" }],
+        error: null,
+      });
       mockClient._mocks.lte.mockResolvedValue({ data: [], error: null });
 
       await service.computeLeaderboard(roomId, "day");

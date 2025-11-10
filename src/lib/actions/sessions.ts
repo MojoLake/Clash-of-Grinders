@@ -7,7 +7,7 @@ import type { CreateSessionRequest, Session } from "@/lib/types";
 
 /**
  * Server Action: Creates a new session for the authenticated user.
- * @param data - Session data (startedAt, endedAt, durationSeconds, roomId)
+ * @param data - Session data (startedAt, endedAt, durationSeconds)
  * @returns The created session
  * @throws Error if validation fails or user is not authenticated
  */

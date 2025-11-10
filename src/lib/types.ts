@@ -42,7 +42,6 @@ export interface RoomWithDetails extends Room {
 export interface Session {
   id: string; // UUID
   userId: string;
-  roomId: string | null;
   startedAt: string; // ISO timestamp
   endedAt: string | null; // ISO timestamp, null if ongoing
   durationSeconds: number;
@@ -95,7 +94,6 @@ export interface DailyTotal {
 // ============================================================================
 
 export interface CreateSessionRequest {
-  roomId?: string | null;
   startedAt: string; // ISO timestamp
   endedAt: string; // ISO timestamp
   durationSeconds: number;
@@ -130,7 +128,7 @@ export interface GetLeaderboardResponse {
 // ============================================================================
 
 export interface SessionCardProps {
-  onSessionEnd: (durationSeconds: number, roomId?: string) => void;
+  onSessionEnd: (durationSeconds: number) => void;
 }
 
 export interface StatsCardProps {
@@ -208,7 +206,6 @@ export interface DbRoom {
 export interface DbSession {
   id: string;
   user_id: string;
-  room_id: string | null;
   started_at: string;
   ended_at: string | null;
   duration_seconds: number;
@@ -249,7 +246,6 @@ export function dbSessionToSession(dbSession: DbSession): Session {
   return {
     id: dbSession.id,
     userId: dbSession.user_id,
-    roomId: dbSession.room_id,
     startedAt: dbSession.started_at,
     endedAt: dbSession.ended_at,
     durationSeconds: dbSession.duration_seconds,

@@ -151,7 +151,6 @@ export default async function DashboardPage() {
                       {new Date(session.startedAt).toLocaleTimeString()}
                     </div>
                   </div>
-                  {session.roomId && <Badge variant="secondary">In Room</Badge>}
                 </div>
               ))}
             </div>

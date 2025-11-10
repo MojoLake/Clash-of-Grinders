@@ -31,7 +31,23 @@ export class LeaderboardService {
     // Step 1: Get date range for period
     const { startDate, endDate } = this.getPeriodRange(period);
 
-    // Step 2: Fetch sessions in date range with user profiles
+    // Step 2: Get all member IDs for this room
+    const { data: memberships, error: memberError } = await this.supabase
+      .from("room_memberships")
+      .select("user_id")
+      .eq("room_id", roomId);
+
+    if (memberError) {
+      throw new Error(`Failed to fetch room members: ${memberError.message}`);
+    }
+
+    if (!memberships || memberships.length === 0) {
+      return []; // No members, empty leaderboard
+    }
+
+    const memberIds = memberships.map((m) => m.user_id);
+
+    // Step 3: Fetch sessions from these members in date range
     const { data: sessions, error } = await this.supabase
       .from("sessions")
       .select(
@@ -47,7 +63,7 @@ export class LeaderboardService {
         )
       `
       )
-      .eq("room_id", roomId)
+      .in("user_id", memberIds)
       .gte("started_at", startDate.toISOString())
       .lte("started_at", endDate.toISOString());
 
@@ -59,16 +75,16 @@ export class LeaderboardService {
       return [];
     }
 
-    // Step 3: Aggregate by user
+    // Step 4: Aggregate by user
     const aggregated = this.aggregateByUser(
       sessions as unknown as SessionWithUser[],
       roomId
     );
 
-    // Step 4: Sort leaderboard
+    // Step 5: Sort leaderboard
     const sorted = this.sortLeaderboard(aggregated);
 
-    // Step 5: Assign ranks
+    // Step 6: Assign ranks
     const ranked = this.assignRanks(sorted);
 
     return ranked;

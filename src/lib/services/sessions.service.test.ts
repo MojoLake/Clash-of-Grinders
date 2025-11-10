@@ -83,7 +83,6 @@ describe("SessionsService", () => {
     const mockDbSession: DbSession = {
       id: "session-123",
       user_id: userId,
-      room_id: null,
       started_at: "2025-01-09T10:00:00Z",
       ended_at: "2025-01-09T11:00:00Z",
       duration_seconds: 3600,
@@ -101,7 +100,6 @@ describe("SessionsService", () => {
       expect(result).toEqual({
         id: "session-123",
         userId: userId,
-        roomId: null,
         startedAt: "2025-01-09T10:00:00Z",
         endedAt: "2025-01-09T11:00:00Z",
         durationSeconds: 3600,
@@ -111,31 +109,9 @@ describe("SessionsService", () => {
       expect(mockClient._mocks.from).toHaveBeenCalledWith("sessions");
       expect(mockClient._mocks.insert).toHaveBeenCalledWith({
         user_id: userId,
-        room_id: null,
         started_at: sessionData.startedAt,
         ended_at: sessionData.endedAt,
         duration_seconds: sessionData.durationSeconds,
-      });
-    });
-
-    it("should create a session with roomId", async () => {
-      const sessionWithRoom = { ...sessionData, roomId: "room-456" };
-      const mockDbSessionWithRoom = { ...mockDbSession, room_id: "room-456" };
-
-      mockClient._mocks.single.mockResolvedValue({
-        data: mockDbSessionWithRoom,
-        error: null,
-      });
-
-      const result = await service.createSession(userId, sessionWithRoom);
-
-      expect(result.roomId).toBe("room-456");
-      expect(mockClient._mocks.insert).toHaveBeenCalledWith({
-        user_id: userId,
-        room_id: "room-456",
-        started_at: sessionWithRoom.startedAt,
-        ended_at: sessionWithRoom.endedAt,
-        duration_seconds: sessionWithRoom.durationSeconds,
       });
     });
 
@@ -169,7 +145,6 @@ describe("SessionsService", () => {
       {
         id: "session-1",
         user_id: userId,
-        room_id: null,
         started_at: "2025-01-09T12:00:00Z",
         ended_at: "2025-01-09T13:00:00Z",
         duration_seconds: 3600,
@@ -178,7 +153,6 @@ describe("SessionsService", () => {
       {
         id: "session-2",
         user_id: userId,
-        room_id: "room-123",
         started_at: "2025-01-09T10:00:00Z",
         ended_at: "2025-01-09T11:00:00Z",
         duration_seconds: 3600,

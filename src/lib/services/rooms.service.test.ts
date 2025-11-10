@@ -1248,6 +1248,7 @@ describe("RoomsService", () => {
         if (table === "room_memberships") {
           membershipCallCount++;
           if (membershipCallCount === 1) {
+            // First call: get user's membership
             return {
               select: vi.fn().mockReturnValue({
                 eq: vi.fn().mockReturnValue({
@@ -1257,12 +1258,22 @@ describe("RoomsService", () => {
                 }),
               }),
             };
+          } else {
+            // Second call: get all member IDs for stats
+            return {
+              select: vi.fn().mockReturnValue({
+                eq: vi.fn().mockResolvedValue({
+                  data: [{ user_id: "user-000" }],
+                  error: null,
+                }),
+              }),
+            };
           }
         }
         if (table === "sessions") {
           return {
             select: vi.fn().mockReturnValue({
-              eq: vi.fn().mockResolvedValue({
+              in: vi.fn().mockResolvedValue({
                 data: [
                   {
                     duration_seconds: 7200,

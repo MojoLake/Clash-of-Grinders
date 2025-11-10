@@ -211,11 +211,33 @@ export class RoomsService {
    * @throws Error if query fails
    */
   private async getRoomStats(roomId: string): Promise<RoomStats> {
-    // Fetch all sessions for the room
+    // Step 1: Get all member IDs for this room
+    const { data: memberships, error: memberError } = await this.supabase
+      .from("room_memberships")
+      .select("user_id")
+      .eq("room_id", roomId);
+
+    if (memberError) {
+      throw new Error(`Failed to fetch room members: ${memberError.message}`);
+    }
+
+    if (!memberships || memberships.length === 0) {
+      // No members, return zero stats
+      return {
+        totalHours: 0,
+        totalSessions: 0,
+        activeToday: 0,
+        avgHoursPerMember: 0,
+      };
+    }
+
+    const memberIds = memberships.map((m) => m.user_id);
+
+    // Step 2: Fetch all sessions from these members
     const { data: sessions, error } = await this.supabase
       .from("sessions")
       .select("duration_seconds, user_id, started_at")
-      .eq("room_id", roomId);
+      .in("user_id", memberIds);
 
     if (error) {
       throw new Error(`Failed to fetch room sessions: ${error.message}`);
@@ -241,7 +263,7 @@ export class RoomsService {
     const activeToday = activeUserIds.size;
 
     // Calculate average hours per member
-    const memberCount = await this.getRoomMemberCount(roomId);
+    const memberCount = memberships.length;
     const avgHoursPerMember = memberCount > 0 ? totalHours / memberCount : 0;
 
     return {

@@ -69,10 +69,9 @@
 --     (night_room_id, test_user_id, 'owner');
 -- 
 --   -- Create a sample session
---   INSERT INTO sessions (user_id, room_id, started_at, ended_at, duration_seconds)
+--   INSERT INTO sessions (user_id, started_at, ended_at, duration_seconds)
 --   VALUES (
 --     test_user_id,
---     morning_room_id,
 --     NOW() - INTERVAL '2 hours',
 --     NOW() - INTERVAL '30 minutes',
 --     5400  -- 90 minutes

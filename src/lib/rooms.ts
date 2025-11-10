@@ -16,6 +16,7 @@ import { mockRooms, mockMemberships, mockSessions } from "./mockData";
 export function computeLeaderboard(
   sessions: Session[],
   users: Map<string, User>,
+  roomId: string,
   period: Period = "week"
 ): LeaderboardEntry[] {
   // Filter sessions by period
@@ -49,7 +50,7 @@ export function computeLeaderboard(
     entries.push({
       userId,
       user,
-      roomId: userSessionList[0].roomId || "",
+      roomId: roomId,
       totalSeconds,
       streakDays,
       lastActiveAt: lastSession.startedAt,

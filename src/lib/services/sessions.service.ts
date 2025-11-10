@@ -14,7 +14,7 @@ export class SessionsService {
   /**
    * Creates a new session for a user.
    * @param userId - The ID of the user creating the session
-   * @param data - Session data (startedAt, endedAt, durationSeconds, roomId)
+   * @param data - Session data (startedAt, endedAt, durationSeconds)
    * @returns The created session
    * @throws Error if creation fails
    */
@@ -26,7 +26,6 @@ export class SessionsService {
       .from("sessions")
       .insert({
         user_id: userId,
-        room_id: data.roomId ?? null,
         started_at: data.startedAt,
         ended_at: data.endedAt,
         duration_seconds: data.durationSeconds,

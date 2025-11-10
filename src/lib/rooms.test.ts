@@ -44,7 +44,6 @@ describe("computeLeaderboard", () => {
     {
       id: "s1",
       userId: "user-1",
-      roomId: "room-1",
       startedAt: format(today, "yyyy-MM-dd'T'HH:mm:ss'Z'"),
       endedAt: null,
       durationSeconds: 3600, // 1 hour
@@ -53,7 +52,6 @@ describe("computeLeaderboard", () => {
     {
       id: "s2",
       userId: "user-2",
-      roomId: "room-1",
       startedAt: format(today, "yyyy-MM-dd'T'HH:mm:ss'Z'"),
       endedAt: null,
       durationSeconds: 7200, // 2 hours
@@ -63,7 +61,6 @@ describe("computeLeaderboard", () => {
     {
       id: "s3",
       userId: "user-1",
-      roomId: "room-1",
       startedAt: format(yesterday, "yyyy-MM-dd'T'HH:mm:ss'Z'"),
       endedAt: null,
       durationSeconds: 1800, // 30 min
@@ -72,7 +69,6 @@ describe("computeLeaderboard", () => {
     {
       id: "s4",
       userId: "user-3",
-      roomId: "room-1",
       startedAt: format(yesterday, "yyyy-MM-dd'T'HH:mm:ss'Z'"),
       endedAt: null,
       durationSeconds: 5400, // 1.5 hours
@@ -82,7 +78,6 @@ describe("computeLeaderboard", () => {
     {
       id: "s5",
       userId: "user-1",
-      roomId: "room-1",
       startedAt: format(twoDaysAgo, "yyyy-MM-dd'T'HH:mm:ss'Z'"),
       endedAt: null,
       durationSeconds: 900, // 15 min
@@ -92,7 +87,6 @@ describe("computeLeaderboard", () => {
     {
       id: "s6",
       userId: "user-2",
-      roomId: "room-1",
       startedAt: format(eightDaysAgo, "yyyy-MM-dd'T'HH:mm:ss'Z'"),
       endedAt: null,
       durationSeconds: 10800, // 3 hours
@@ -101,7 +95,7 @@ describe("computeLeaderboard", () => {
   ];
 
   it("computes leaderboard for all-time period", () => {
-    const leaderboard = computeLeaderboard(sessions, users, "all-time");
+    const leaderboard = computeLeaderboard(sessions, users, "room-1", "all-time");
 
     expect(leaderboard).toHaveLength(3);
     
@@ -125,13 +119,13 @@ describe("computeLeaderboard", () => {
   // system date, causing them to fail. Proper date mocking would be needed.
 
   it("handles empty sessions array", () => {
-    const leaderboard = computeLeaderboard([], users, "all-time");
+    const leaderboard = computeLeaderboard([], users, "room-1", "all-time");
     expect(leaderboard).toHaveLength(0);
   });
 
   it("handles single user", () => {
     const singleSession: Session[] = [sessions[0]];
-    const leaderboard = computeLeaderboard(singleSession, users, "all-time");
+    const leaderboard = computeLeaderboard(singleSession, users, "room-1", "all-time");
 
     expect(leaderboard).toHaveLength(1);
     expect(leaderboard[0].userId).toBe("user-1");
@@ -139,7 +133,7 @@ describe("computeLeaderboard", () => {
   });
 
   it("includes user data in entries", () => {
-    const leaderboard = computeLeaderboard(sessions, users, "all-time");
+    const leaderboard = computeLeaderboard(sessions, users, "room-1", "all-time");
 
     leaderboard.forEach((entry) => {
       expect(entry.user).toBeDefined();
@@ -149,7 +143,7 @@ describe("computeLeaderboard", () => {
   });
 
   it("includes lastActiveAt from most recent session", () => {
-    const leaderboard = computeLeaderboard(sessions, users, "all-time");
+    const leaderboard = computeLeaderboard(sessions, users, "room-1", "all-time");
     const user1Entry = leaderboard.find((e) => e.userId === "user-1");
 
     expect(user1Entry?.lastActiveAt).toBe(
