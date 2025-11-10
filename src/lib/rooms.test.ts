@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { computeLeaderboard, getRoomStats, getUserRooms } from "./rooms";
+import { computeLeaderboard, getRoomStats } from "./rooms";
 import type { Session, User, Room } from "./types";
 import { format, subDays } from "date-fns";
 
@@ -169,7 +169,6 @@ describe("getRoomStats", () => {
       {
         id: "s1",
         userId: "user-1",
-        roomId: "room-1",
         startedAt: format(today, "yyyy-MM-dd'T'HH:mm:ss'Z'"),
         endedAt: null,
         durationSeconds: 3600, // 1 hour
@@ -178,7 +177,6 @@ describe("getRoomStats", () => {
       {
         id: "s2",
         userId: "user-2",
-        roomId: "room-1",
         startedAt: format(today, "yyyy-MM-dd'T'HH:mm:ss'Z'"),
         endedAt: null,
         durationSeconds: 7200, // 2 hours
@@ -197,7 +195,6 @@ describe("getRoomStats", () => {
       {
         id: "s1",
         userId: "user-1",
-        roomId: "room-1",
         startedAt: format(today, "yyyy-MM-dd'T'HH:mm:ss'Z'"),
         endedAt: null,
         durationSeconds: 5555, // ~1.543 hours
@@ -215,7 +212,6 @@ describe("getRoomStats", () => {
       {
         id: "s1",
         userId: "user-1",
-        roomId: "room-1",
         startedAt: format(today, "yyyy-MM-dd'T'HH:mm:ss'Z'"),
         endedAt: null,
         durationSeconds: 7200, // 2 hours
@@ -224,7 +220,6 @@ describe("getRoomStats", () => {
       {
         id: "s2",
         userId: "user-2",
-        roomId: "room-1",
         startedAt: format(today, "yyyy-MM-dd'T'HH:mm:ss'Z'"),
         endedAt: null,
         durationSeconds: 3600, // 1 hour
@@ -254,50 +249,6 @@ describe("getRoomStats", () => {
     expect(stats.avgHoursPerMember).toBe(0);
     expect(stats.activeToday).toBe(0);
     expect(stats.totalSessions).toBe(0);
-  });
-});
-
-describe("getUserRooms", () => {
-  it("returns rooms for a specific user with stats", () => {
-    const userRooms = getUserRooms("a1b2c3d4-e5f6-7890-abcd-ef1234567890");
-
-    expect(userRooms.length).toBeGreaterThan(0);
-    userRooms.forEach((room) => {
-      expect(room.stats).toBeDefined();
-      expect(room.stats.totalSessions).toBeGreaterThanOrEqual(0);
-      expect(room.stats.totalHours).toBeGreaterThanOrEqual(0);
-      expect(room.stats.avgHoursPerMember).toBeGreaterThanOrEqual(0);
-      expect(room.stats.activeToday).toBeGreaterThanOrEqual(0);
-    });
-  });
-
-  it("filters rooms correctly by userId", () => {
-    const user1Rooms = getUserRooms("a1b2c3d4-e5f6-7890-abcd-ef1234567890");
-    const user2Rooms = getUserRooms("user-2");
-
-    // The mock user should be in 2 rooms
-    expect(user1Rooms).toHaveLength(2);
-    
-    // User-2 should be in 1 room (room-1)
-    expect(user2Rooms).toHaveLength(1);
-    expect(user2Rooms[0].id).toBe("room-1");
-  });
-
-  it("returns empty array for user with no rooms", () => {
-    const userRooms = getUserRooms("nonexistent-user");
-
-    expect(userRooms).toHaveLength(0);
-  });
-
-  it("includes room details in returned data", () => {
-    const userRooms = getUserRooms("a1b2c3d4-e5f6-7890-abcd-ef1234567890");
-
-    userRooms.forEach((room) => {
-      expect(room.id).toBeTruthy();
-      expect(room.name).toBeTruthy();
-      expect(room.createdBy).toBeTruthy();
-      expect(room.createdAt).toBeTruthy();
-    });
   });
 });
 

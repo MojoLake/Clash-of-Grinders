@@ -47,7 +47,6 @@ describe("ActivityGraphCard", () => {
       {
         id: "s1",
         userId: "user-1",
-        roomId: null,
         startedAt: today.toISOString(),
         endedAt: null,
         durationSeconds: 3600,
@@ -66,7 +65,6 @@ describe("ActivityGraphCard", () => {
       {
         id: "s1",
         userId: "user-1",
-        roomId: null,
         startedAt: today.toISOString(),
         endedAt: null,
         durationSeconds: 3600,
@@ -90,7 +88,6 @@ describe("ActivityGraphCard", () => {
       {
         id: "s1",
         userId: "user-1",
-        roomId: null,
         startedAt: today.toISOString(),
         endedAt: null,
         durationSeconds: 1800, // 30 minutes
@@ -129,7 +126,6 @@ describe("ActivityGraphCard", () => {
       {
         id: "s2",
         userId: "user-1",
-        roomId: null,
         startedAt: today.toISOString(),
         endedAt: null,
         durationSeconds: 5400, // 1.5 hours
@@ -159,7 +155,6 @@ describe("ActivityGraphCard", () => {
       {
         id: "s2",
         userId: "user-1",
-        roomId: null,
         startedAt: twoDaysAgo.toISOString(),
         endedAt: null,
         durationSeconds: 7200, // 2 hours two days ago
@@ -226,7 +221,6 @@ describe("ActivityGraphCard", () => {
       {
         id: "s1",
         userId: "user-1",
-        roomId: null,
         startedAt: fourDaysAgo.toISOString(),
         endedAt: null,
         durationSeconds: 3600,

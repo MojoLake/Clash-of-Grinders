@@ -8,7 +8,6 @@ describe("TimeRangeCard", () => {
   const createSession = (id: string, durationSeconds: number): Session => ({
     id,
     userId: "user-1",
-    roomId: null,
     startedAt: new Date().toISOString(),
     endedAt: new Date().toISOString(),
     durationSeconds,

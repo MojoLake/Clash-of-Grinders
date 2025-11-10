@@ -4,6 +4,7 @@ import {
   parseISO,
   differenceInDays,
   format,
+  subDays,
 } from "date-fns";
 import type { Session, DailyTotal } from "./types";
 

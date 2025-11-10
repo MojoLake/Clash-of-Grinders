@@ -59,7 +59,6 @@ describe("calculateDayTotal", () => {
       {
         id: "s1",
         userId: "user-1",
-        roomId: "room-1",
         startedAt: format(today, "yyyy-MM-dd'T'08:00:00'Z'"),
         endedAt: null,
         durationSeconds: 3600, // 1 hour
@@ -68,7 +67,6 @@ describe("calculateDayTotal", () => {
       {
         id: "s2",
         userId: "user-1",
-        roomId: "room-1",
         startedAt: format(today, "yyyy-MM-dd'T'14:00:00'Z'"),
         endedAt: null,
         durationSeconds: 7200, // 2 hours
@@ -85,7 +83,6 @@ describe("calculateDayTotal", () => {
       {
         id: "s1",
         userId: "user-1",
-        roomId: "room-1",
         startedAt: format(today, "yyyy-MM-dd'T'08:00:00'Z'"),
         endedAt: null,
         durationSeconds: 3600,
@@ -94,7 +91,6 @@ describe("calculateDayTotal", () => {
       {
         id: "s2",
         userId: "user-1",
-        roomId: "room-1",
         startedAt: format(yesterday, "yyyy-MM-dd'T'14:00:00'Z'"),
         endedAt: null,
         durationSeconds: 7200,
@@ -111,7 +107,6 @@ describe("calculateDayTotal", () => {
       {
         id: "s1",
         userId: "user-1",
-        roomId: "room-1",
         startedAt: format(yesterday, "yyyy-MM-dd'T'08:00:00'Z'"),
         endedAt: null,
         durationSeconds: 3600,
@@ -139,7 +134,6 @@ describe("calculateWeekTotal", () => {
       {
         id: "s1",
         userId: "user-1",
-        roomId: "room-1",
         startedAt: format(today, "yyyy-MM-dd'T'08:00:00'Z'"),
         endedAt: null,
         durationSeconds: 3600,
@@ -148,7 +142,6 @@ describe("calculateWeekTotal", () => {
       {
         id: "s2",
         userId: "user-1",
-        roomId: "room-1",
         startedAt: format(twoDaysAgo, "yyyy-MM-dd'T'14:00:00'Z'"),
         endedAt: null,
         durationSeconds: 7200,
@@ -165,7 +158,6 @@ describe("calculateWeekTotal", () => {
       {
         id: "s1",
         userId: "user-1",
-        roomId: "room-1",
         startedAt: format(today, "yyyy-MM-dd'T'08:00:00'Z'"),
         endedAt: null,
         durationSeconds: 3600,
@@ -174,7 +166,6 @@ describe("calculateWeekTotal", () => {
       {
         id: "s2",
         userId: "user-1",
-        roomId: "room-1",
         startedAt: format(eightDaysAgo, "yyyy-MM-dd'T'14:00:00'Z'"),
         endedAt: null,
         durationSeconds: 7200,
@@ -209,7 +200,6 @@ describe("calculateLongestStreak", () => {
       {
         id: "s1",
         userId: "user-1",
-        roomId: "room-1",
         startedAt: "2025-11-01T08:00:00Z",
         endedAt: null,
         durationSeconds: 3600,
@@ -218,7 +208,6 @@ describe("calculateLongestStreak", () => {
       {
         id: "s2",
         userId: "user-1",
-        roomId: "room-1",
         startedAt: "2025-11-02T08:00:00Z",
         endedAt: null,
         durationSeconds: 3600,
@@ -227,7 +216,6 @@ describe("calculateLongestStreak", () => {
       {
         id: "s3",
         userId: "user-1",
-        roomId: "room-1",
         startedAt: "2025-11-03T08:00:00Z",
         endedAt: null,
         durationSeconds: 3600,
@@ -238,7 +226,6 @@ describe("calculateLongestStreak", () => {
       {
         id: "s4",
         userId: "user-1",
-        roomId: "room-1",
         startedAt: "2025-11-06T08:00:00Z",
         endedAt: null,
         durationSeconds: 3600,
@@ -247,7 +234,6 @@ describe("calculateLongestStreak", () => {
       {
         id: "s5",
         userId: "user-1",
-        roomId: "room-1",
         startedAt: "2025-11-07T08:00:00Z",
         endedAt: null,
         durationSeconds: 3600,
@@ -269,7 +255,6 @@ describe("calculateLongestStreak", () => {
       {
         id: "s1",
         userId: "user-1",
-        roomId: "room-1",
         startedAt: "2025-11-01T08:00:00Z",
         endedAt: null,
         durationSeconds: 3600,
@@ -286,7 +271,6 @@ describe("calculateLongestStreak", () => {
       {
         id: "s1",
         userId: "user-1",
-        roomId: "room-1",
         startedAt: "2025-11-01T08:00:00Z",
         endedAt: null,
         durationSeconds: 3600,
@@ -295,7 +279,6 @@ describe("calculateLongestStreak", () => {
       {
         id: "s2",
         userId: "user-1",
-        roomId: "room-1",
         startedAt: "2025-11-05T08:00:00Z",
         endedAt: null,
         durationSeconds: 3600,
@@ -304,7 +287,6 @@ describe("calculateLongestStreak", () => {
       {
         id: "s3",
         userId: "user-1",
-        roomId: "room-1",
         startedAt: "2025-11-10T08:00:00Z",
         endedAt: null,
         durationSeconds: 3600,
@@ -442,7 +424,6 @@ describe("getTodayDateRange", () => {
       {
         id: "s1",
         userId: "user-1",
-        roomId: null,
         startedAt: yesterday.toISOString(),
         endedAt: null,
         durationSeconds: 3600,
@@ -451,7 +432,6 @@ describe("getTodayDateRange", () => {
       {
         id: "s2",
         userId: "user-1",
-        roomId: null,
         startedAt: now.toISOString(),
         endedAt: null,
         durationSeconds: 3600,
@@ -460,7 +440,6 @@ describe("getTodayDateRange", () => {
       {
         id: "s3",
         userId: "user-1",
-        roomId: null,
         startedAt: tomorrow.toISOString(),
         endedAt: null,
         durationSeconds: 3600,
@@ -506,7 +485,6 @@ describe("getLast5DaysTotals", () => {
       {
         id: "s1",
         userId: "user-1",
-        roomId: null,
         startedAt: today.toISOString(),
         endedAt: null,
         durationSeconds: 3600, // 1 hour
@@ -515,7 +493,6 @@ describe("getLast5DaysTotals", () => {
       {
         id: "s2",
         userId: "user-1",
-        roomId: null,
         startedAt: today.toISOString(),
         endedAt: null,
         durationSeconds: 1800, // 30 minutes
@@ -542,7 +519,6 @@ describe("getLast5DaysTotals", () => {
       {
         id: "s1",
         userId: "user-1",
-        roomId: null,
         startedAt: fourDaysAgo.toISOString(),
         endedAt: null,
         durationSeconds: 1000,
@@ -551,7 +527,6 @@ describe("getLast5DaysTotals", () => {
       {
         id: "s2",
         userId: "user-1",
-        roomId: null,
         startedAt: twoDaysAgo.toISOString(),
         endedAt: null,
         durationSeconds: 2000,
@@ -560,7 +535,6 @@ describe("getLast5DaysTotals", () => {
       {
         id: "s3",
         userId: "user-1",
-        roomId: null,
         startedAt: today.toISOString(),
         endedAt: null,
         durationSeconds: 3000,
@@ -584,7 +558,6 @@ describe("getLast5DaysTotals", () => {
       {
         id: "s1",
         userId: "user-1",
-        roomId: null,
         startedAt: today.toISOString(),
         endedAt: null,
         durationSeconds: 3600,
