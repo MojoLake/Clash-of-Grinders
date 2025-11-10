@@ -7,7 +7,6 @@ import { createClient } from "@/lib/supabase/server";
 import { RoomsService } from "@/lib/services/rooms.service";
 import { getCurrentUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import Link from "next/link";
 
 export default async function RoomsPage() {
   // Create Supabase client
@@ -60,9 +59,7 @@ export default async function RoomsPage() {
         {userRooms.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {userRooms.map((room) => (
-              <Link key={room.id} href={`/rooms/${room.id}`}>
-                <RoomCard room={room} />
-              </Link>
+              <RoomCard key={room.id} room={room} />
             ))}
           </div>
         )}
