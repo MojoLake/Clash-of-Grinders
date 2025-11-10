@@ -1,6 +1,11 @@
 import { createServerClient } from "@supabase/ssr";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 
+/**
+ * Creates a Supabase client for Server Components and Server Actions
+ * with cookie-based authentication.
+ */
 export async function createClient() {
   const cookieStore = await cookies();
 
@@ -23,6 +28,26 @@ export async function createClient() {
             // user sessions.
           }
         },
+      },
+    }
+  );
+}
+
+/**
+ * Creates a Supabase admin client that bypasses RLS policies.
+ *
+ * ⚠️ SECURITY: Only use this after authenticating the user first!
+ * This client should only be created after verifying user identity
+ * with the regular SSR client.
+ */
+export async function createAdminClient() {
+  return createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
       },
     }
   );

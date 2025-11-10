@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { joinRoomAction } from '@/lib/actions/rooms';
 
 export function JoinRoomDialog() {
   const router = useRouter();
@@ -29,20 +30,17 @@ export function JoinRoomDialog() {
     setError(null);
     
     try {
-      const response = await fetch(`/api/rooms/${roomId}/join`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
+      // Call Server Action directly
+      const result = await joinRoomAction(roomId);
       
-      if (response.ok) {
+      if (result.success) {
         setOpen(false);
         setRoomId('');
         setError(null);
         // Refresh page to show joined room
         router.refresh();
       } else {
-        const errorData = await response.json();
-        setError(errorData.error || 'Failed to join room');
+        setError(result.error);
       }
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Failed to join room');

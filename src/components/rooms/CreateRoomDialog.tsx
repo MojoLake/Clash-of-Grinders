@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { createRoomAction } from "@/lib/actions/rooms";
 
 export function CreateRoomDialog() {
   const router = useRouter();
@@ -38,13 +39,17 @@ export function CreateRoomDialog() {
     setError(null);
 
     try {
-      const response = await fetch("/api/rooms", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, description }),
-      });
+      // Create FormData for Server Action
+      const formData = new FormData();
+      formData.append("name", name);
+      if (description) {
+        formData.append("description", description);
+      }
 
-      if (response.ok) {
+      // Call Server Action directly
+      const result = await createRoomAction(formData);
+
+      if (result.success) {
         setOpen(false);
         setName("");
         setDescription("");
@@ -52,8 +57,7 @@ export function CreateRoomDialog() {
         // Refresh page to show new room
         router.refresh();
       } else {
-        const errorData = await response.json();
-        setError(errorData.error || "Failed to create room");
+        setError(result.error);
       }
     } catch (error) {
       setError(

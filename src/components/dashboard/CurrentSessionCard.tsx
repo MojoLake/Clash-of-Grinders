@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { formatDurationWithSeconds } from "@/lib/sessions";
 import type { TimerState, TimerData } from "@/lib/types";
+import { createSessionAction } from "@/lib/actions/sessions";
 
 export function CurrentSessionCard() {
   const router = useRouter();
@@ -73,21 +74,15 @@ export function CurrentSessionCard() {
     const startedAt = new Date(endedAt.getTime() - elapsedSeconds * 1000);
 
     try {
-      // Save session to API
-      const response = await fetch("/api/sessions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          startedAt: startedAt.toISOString(),
-          endedAt: endedAt.toISOString(),
-          durationSeconds: elapsedSeconds,
-        }),
+      // Save session via Server Action
+      const result = await createSessionAction({
+        startedAt: startedAt.toISOString(),
+        endedAt: endedAt.toISOString(),
+        durationSeconds: elapsedSeconds,
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        const errorMessage = errorData.error || "Failed to save session";
-        alert(`Error saving session: ${errorMessage}`);
+      if (!result.success) {
+        alert(`Error saving session: ${result.error}`);
         return;
       }
 
