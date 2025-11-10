@@ -17,7 +17,7 @@ export default async function RoomsPage() {
 
   // Handle unauthenticated state
   if (!user) {
-    redirect("/dev-login");
+    redirect("/login");
   }
 
   // Instantiate RoomsService
