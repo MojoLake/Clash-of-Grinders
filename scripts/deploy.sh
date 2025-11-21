@@ -28,7 +28,7 @@ set -e  # Exit on error
 VPS_IP="${VPS_IP:-}"
 SSH_USER="${SSH_USER:-root}"
 DEPLOY_USER="${DEPLOY_USER:-mojolake}"
-VPS_PATH="${VPS_PATH:-/home/mojolake/clash-of-grinders}"
+VPS_PATH="${VPS_PATH:-/home/mojolake/Clash-of-Grinders}"
 PM2_APP_NAME="${PM2_APP_NAME:-clash-of-grinders}"
 TAR_FILE="clash-of-grinders-deploy.tar.gz"
 
@@ -114,6 +114,11 @@ echo ""
 
 # Step 3: Transfer to VPS
 info "Step 3/5: Transferring to VPS ($SSH_USER@$VPS_IP)..."
+echo "DEBUG: TAR_FILE=$TAR_FILE"
+echo "DEBUG: SSH_USER=$SSH_USER"
+echo "DEBUG: VPS_IP=$VPS_IP"
+echo "DEBUG: VPS_PATH=$VPS_PATH"
+echo "DEBUG: Full command: scp $TAR_FILE $SSH_USER@$VPS_IP:$VPS_PATH/"
 if scp "$TAR_FILE" "$SSH_USER@$VPS_IP:$VPS_PATH/"; then
     success "Transfer completed successfully"
 else
@@ -130,7 +135,7 @@ ssh "$SSH_USER@$VPS_IP" bash << EOF
     set -e
     
     echo "Switching to user: $DEPLOY_USER"
-    su - $DEPLOY_USER bash << DEPLOY_EOF
+    su - $DEPLOY_USER << DEPLOY_EOF
         set -e
         cd $VPS_PATH
         
