@@ -10,23 +10,37 @@ import { createSessionAction } from "@/lib/actions/sessions";
 
 export function CurrentSessionCard() {
   const router = useRouter();
-  const [timerState, setTimerState] = useState<TimerState>("idle");
-  const [elapsedSeconds, setElapsedSeconds] = useState(0);
 
-  // Load from localStorage on mount
-  useEffect(() => {
+  // Lazy initialization: read from localStorage only once on mount
+  const [timerState, setTimerState] = useState<TimerState>(() => {
+    if (typeof window === "undefined") return "idle";
     const saved = localStorage.getItem("currentSession");
     if (saved) {
       try {
         const data: TimerData = JSON.parse(saved);
-        setTimerState(data.state);
-        setElapsedSeconds(data.elapsedSeconds);
+        return data.state;
       } catch (error) {
         console.error("Failed to parse saved session:", error);
         localStorage.removeItem("currentSession");
       }
     }
-  }, []);
+    return "idle";
+  });
+
+  const [elapsedSeconds, setElapsedSeconds] = useState(() => {
+    if (typeof window === "undefined") return 0;
+    const saved = localStorage.getItem("currentSession");
+    if (saved) {
+      try {
+        const data: TimerData = JSON.parse(saved);
+        return data.elapsedSeconds;
+      } catch (error) {
+        console.error("Failed to parse saved session:", error);
+        localStorage.removeItem("currentSession");
+      }
+    }
+    return 0;
+  });
 
   // Interval for timer updates
   useEffect(() => {
