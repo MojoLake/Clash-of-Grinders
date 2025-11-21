@@ -48,6 +48,17 @@ export interface Session {
   createdAt: string; // ISO timestamp
 }
 
+export interface Message {
+  id: string; // UUID
+  roomId: string;
+  userId: string;
+  content: string;
+  createdAt: string; // ISO timestamp
+  editedAt?: string | null; // ISO timestamp
+  deletedAt?: string | null; // ISO timestamp
+  user?: User; // Joined profile data
+}
+
 // ============================================================================
 // Computed/Derived Types
 // ============================================================================
@@ -219,6 +230,16 @@ export interface DbRoomMembership {
   joined_at: string;
 }
 
+export interface DbMessage {
+  id: string;
+  room_id: string;
+  user_id: string;
+  content: string;
+  created_at: string;
+  edited_at?: string | null;
+  deleted_at?: string | null;
+}
+
 // ============================================================================
 // Mapper Functions (DB <-> App Types)
 // ============================================================================
@@ -261,5 +282,17 @@ export function dbMembershipToMembership(
     userId: dbMembership.user_id,
     role: dbMembership.role,
     joinedAt: dbMembership.joined_at,
+  };
+}
+
+export function dbMessageToMessage(dbMsg: DbMessage): Message {
+  return {
+    id: dbMsg.id,
+    roomId: dbMsg.room_id,
+    userId: dbMsg.user_id,
+    content: dbMsg.content,
+    createdAt: dbMsg.created_at,
+    editedAt: dbMsg.edited_at,
+    deletedAt: dbMsg.deleted_at,
   };
 }

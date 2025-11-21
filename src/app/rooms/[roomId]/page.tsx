@@ -3,6 +3,8 @@ import { RoomHeader } from "@/components/rooms/RoomHeader";
 import { RoomStatsCard } from "@/components/rooms/RoomStatsCard";
 import { LeaderboardSection } from "@/components/rooms/LeaderboardSection";
 import { MembersSection } from "@/components/rooms/MembersSection";
+import { RoomChat } from "@/components/rooms/RoomChat";
+import { RoomJoinPrompt } from "@/components/rooms/RoomJoinPrompt";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
 import { RoomsService } from "@/lib/services/rooms.service";
@@ -34,13 +36,28 @@ export default async function RoomDetailPage({
     redirect("/login");
   }
 
-  // Instantiate services
-  const roomsService = new RoomsService(supabase);
+  // Instantiate services (use admin client to bypass RLS for basic room info)
+  const adminClient = await createAdminClient();
+  const roomsService = new RoomsService(adminClient);
 
   // Check membership first
   const isMember = await roomsService.isUserMember(user.id, roomId);
+
+  // If not a member, show join prompt
   if (!isMember) {
-    notFound(); // 404 page
+    let basicRoomInfo;
+    try {
+      basicRoomInfo = await roomsService.getBasicRoomInfo(roomId);
+    } catch (error) {
+      console.error("Error fetching room info:", error);
+      notFound();
+    }
+
+    return (
+      <AppShell>
+        <RoomJoinPrompt room={basicRoomInfo} />
+      </AppShell>
+    );
   }
 
   // Fetch room details
@@ -59,9 +76,6 @@ export default async function RoomDetailPage({
   )
     ? (periodParam as LeaderboardPeriod)
     : "week";
-
-  // Use admin client for leaderboard to bypass RLS after membership verification
-  const adminClient = await createAdminClient();
   const leaderboardService = new LeaderboardService(adminClient);
 
   // Fetch leaderboard
@@ -72,16 +86,30 @@ export default async function RoomDetailPage({
 
   return (
     <AppShell>
-      <div className="p-6 space-y-6 max-w-5xl mx-auto">
+      <div className="p-6 space-y-6 max-w-7xl mx-auto">
         <RoomHeader room={room} currentUserId={user.id} />
-        <RoomStatsCard stats={room.stats} memberCount={room.memberCount} />
-        <LeaderboardSection
-          leaderboard={leaderboard}
-          period={period}
-          currentUserId={user.id}
-          roomId={roomId}
-        />
-        <MembersSection members={room.members || []} />
+
+        {/* Two-column layout */}
+        <div className="grid lg:grid-cols-3 gap-6">
+          {/* Left column: Stats, Leaderboard, Members */}
+          <div className="lg:col-span-2 space-y-6">
+            <RoomStatsCard stats={room.stats} memberCount={room.memberCount} />
+            <LeaderboardSection
+              leaderboard={leaderboard}
+              period={period}
+              currentUserId={user.id}
+              roomId={roomId}
+            />
+            <MembersSection members={room.members || []} />
+          </div>
+
+          {/* Right column: Chat (sticky on desktop) */}
+          <div className="lg:col-span-1">
+            <div className="lg:sticky lg:top-6">
+              <RoomChat roomId={roomId} currentUser={user} />
+            </div>
+          </div>
+        </div>
       </div>
     </AppShell>
   );

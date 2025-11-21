@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { LeaveRoomDialog } from "./LeaveRoomDialog";
 import { formatDate } from "@/lib/utils";
 import type { RoomWithDetails } from "@/lib/types";
-import { ArrowLeft, Settings } from "lucide-react";
+import { ArrowLeft, Settings, Link2, Check } from "lucide-react";
 
 interface RoomHeaderProps {
   room: RoomWithDetails;
@@ -16,9 +16,21 @@ interface RoomHeaderProps {
 export function RoomHeader({ room, currentUserId }: RoomHeaderProps) {
   const router = useRouter();
   const [leaveDialogOpen, setLeaveDialogOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const isOwner = room.role === "owner";
   const hasOtherMembers = room.memberCount > 1;
+
+  const handleCopyInviteLink = async () => {
+    const inviteUrl = `${window.location.origin}/rooms/${room.id}`;
+    try {
+      await navigator.clipboard.writeText(inviteUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy invite link:", err);
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -46,6 +58,23 @@ export function RoomHeader({ room, currentUserId }: RoomHeaderProps) {
 
       {/* Actions */}
       <div className="flex gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleCopyInviteLink}
+        >
+          {copied ? (
+            <>
+              <Check className="mr-2 h-4 w-4" />
+              Copied!
+            </>
+          ) : (
+            <>
+              <Link2 className="mr-2 h-4 w-4" />
+              Copy Invite Link
+            </>
+          )}
+        </Button>
         {isOwner && (
           <Button
             variant="outline"

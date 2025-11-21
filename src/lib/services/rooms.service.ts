@@ -36,6 +36,45 @@ export class RoomsService {
   }
 
   /**
+   * Gets basic room information without requiring membership.
+   * Used for displaying room details to potential members via invite links.
+   * @param roomId - The room's ID
+   * @returns Basic room information with member count
+   * @throws Error if room not found or query fails
+   */
+  async getBasicRoomInfo(roomId: string): Promise<Room & { memberCount: number }> {
+    // Fetch room data
+    const { data: dbRoom, error: roomError } = await this.supabase
+      .from("rooms")
+      .select("*")
+      .eq("id", roomId)
+      .maybeSingle();
+
+    if (roomError) {
+      throw new Error(`Failed to fetch room: ${roomError.message}`);
+    }
+
+    if (!dbRoom) {
+      throw new Error("Room not found");
+    }
+
+    // Get member count
+    const { count, error: countError } = await this.supabase
+      .from("room_memberships")
+      .select("*", { count: "exact", head: true })
+      .eq("room_id", roomId);
+
+    if (countError) {
+      throw new Error(`Failed to fetch member count: ${countError.message}`);
+    }
+
+    return {
+      ...dbRoomToRoom(dbRoom as DbRoom),
+      memberCount: count ?? 0,
+    };
+  }
+
+  /**
    * Creates a new room and adds the creator as owner.
    * @param userId - The ID of the user creating the room
    * @param data - Room data (name, description)
