@@ -11,7 +11,7 @@ import { joinRoomAction } from '@/lib/actions/rooms';
 export function JoinRoomDialog() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [roomId, setRoomId] = useState('');
+  const [roomInput, setRoomInput] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
@@ -19,9 +19,29 @@ export function JoinRoomDialog() {
     setOpen(newOpen);
     if (!newOpen) {
       // Reset form when dialog closes
-      setRoomId('');
+      setRoomInput('');
       setError(null);
     }
+  };
+
+  // Extract room ID from URL or return the input as-is
+  const extractRoomId = (input: string): string => {
+    const trimmed = input.trim();
+    
+    // Check if it's a URL
+    try {
+      const url = new URL(trimmed);
+      // Extract room ID from pathname like /rooms/{roomId}
+      const match = url.pathname.match(/\/rooms\/([a-f0-9-]+)/i);
+      if (match) {
+        return match[1];
+      }
+    } catch {
+      // Not a valid URL, treat as room ID
+    }
+    
+    // Return as-is (assumes it's a room ID)
+    return trimmed;
   };
   
   const handleSubmit = async (e: React.FormEvent) => {
@@ -30,12 +50,21 @@ export function JoinRoomDialog() {
     setError(null);
     
     try {
+      // Extract room ID from input (handles both URLs and direct IDs)
+      const roomId = extractRoomId(roomInput);
+      
+      if (!roomId) {
+        setError('Please enter a valid room ID or invite link');
+        setIsSubmitting(false);
+        return;
+      }
+
       // Call Server Action directly
       const result = await joinRoomAction(roomId);
       
       if (result.success) {
         setOpen(false);
-        setRoomId('');
+        setRoomInput('');
         setError(null);
         // Refresh page to show joined room
         router.refresh();
@@ -60,16 +89,16 @@ export function JoinRoomDialog() {
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label htmlFor="roomId">Room ID</Label>
+            <Label htmlFor="roomInput">Room Invite Link or ID</Label>
             <Input
-              id="roomId"
-              value={roomId}
-              onChange={(e) => setRoomId(e.target.value)}
+              id="roomInput"
+              value={roomInput}
+              onChange={(e) => setRoomInput(e.target.value)}
               required
-              placeholder="e.g. 550e8400-e29b-41d4-a716-446655440000"
+              placeholder="Paste invite link or room ID"
             />
             <p className="text-sm text-slate-400 mt-1">
-              Ask the room owner for the room ID to join
+              Paste the invite link shared by the room owner
             </p>
           </div>
           {error && (
@@ -77,7 +106,7 @@ export function JoinRoomDialog() {
               {error}
             </div>
           )}
-          <Button type="submit" disabled={isSubmitting || !roomId} className="w-full">
+          <Button type="submit" disabled={isSubmitting || !roomInput} className="w-full">
             {isSubmitting ? 'Joining...' : 'Join'}
           </Button>
         </form>
