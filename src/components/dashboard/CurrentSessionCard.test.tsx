@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, waitFor, fireEvent, act } from "@testing-library/react";
 import { CurrentSessionCard } from "./CurrentSessionCard";
+import { TimerProvider } from "@/contexts/TimerContext";
 
 // Mock next/navigation
 vi.mock("next/navigation", () => ({
@@ -27,14 +28,22 @@ describe("CurrentSessionCard", () => {
   });
 
   it("should render with idle state", () => {
-    render(<CurrentSessionCard />);
+    render(
+      <TimerProvider>
+        <CurrentSessionCard />
+      </TimerProvider>
+    );
     expect(screen.getByText("Current Session")).toBeInTheDocument();
     expect(screen.getByText("Start Grinding")).toBeInTheDocument();
     expect(screen.getByText("0s")).toBeInTheDocument();
   });
 
   it("should start timer when Start Grinding is clicked", async () => {
-    render(<CurrentSessionCard />);
+    render(
+      <TimerProvider>
+        <CurrentSessionCard />
+      </TimerProvider>
+    );
 
     const startButton = screen.getByText("Start Grinding");
     fireEvent.click(startButton);
@@ -44,7 +53,11 @@ describe("CurrentSessionCard", () => {
   });
 
   it("should disable End Session button when elapsed time is 0 seconds", async () => {
-    render(<CurrentSessionCard />);
+    render(
+      <TimerProvider>
+        <CurrentSessionCard />
+      </TimerProvider>
+    );
 
     const startButton = screen.getByText("Start Grinding");
     fireEvent.click(startButton);
@@ -55,7 +68,11 @@ describe("CurrentSessionCard", () => {
   });
 
   it("should enable End Session button after 1 second", () => {
-    render(<CurrentSessionCard />);
+    render(
+      <TimerProvider>
+        <CurrentSessionCard />
+      </TimerProvider>
+    );
 
     const startButton = screen.getByText("Start Grinding");
     fireEvent.click(startButton);
@@ -79,7 +96,11 @@ describe("CurrentSessionCard", () => {
   });
 
   it("should show alert if user tries to end session with 0 seconds programmatically", async () => {
-    render(<CurrentSessionCard />);
+    render(
+      <TimerProvider>
+        <CurrentSessionCard />
+      </TimerProvider>
+    );
 
     const startButton = screen.getByText("Start Grinding");
     fireEvent.click(startButton);
@@ -97,7 +118,11 @@ describe("CurrentSessionCard", () => {
   // which doesn't work in test environment without proper Next.js request context
 
   it("should pause and resume timer correctly", () => {
-    render(<CurrentSessionCard />);
+    render(
+      <TimerProvider>
+        <CurrentSessionCard />
+      </TimerProvider>
+    );
 
     const startButton = screen.getByText("Start Grinding");
     fireEvent.click(startButton);
@@ -128,7 +153,11 @@ describe("CurrentSessionCard", () => {
   });
 
   it("should disable End Session button in paused state when elapsed < 1", async () => {
-    render(<CurrentSessionCard />);
+    render(
+      <TimerProvider>
+        <CurrentSessionCard />
+      </TimerProvider>
+    );
 
     const startButton = screen.getByText("Start Grinding");
     fireEvent.click(startButton);

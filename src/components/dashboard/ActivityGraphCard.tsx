@@ -1,17 +1,18 @@
 "use client";
 
-import { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { useRef, useMemo, useCallback, useState, useEffect } from "react";
 import { format } from "date-fns";
 import { Card } from "@/components/ui/card";
 import { getLast5DaysTotals, formatDuration } from "@/lib/sessions";
-import type { Session, TimerData, DailyTotal } from "@/lib/types";
+import type { Session, DailyTotal } from "@/lib/types";
+import { useTimer } from "@/contexts/TimerContext";
 
 interface ActivityGraphCardProps {
   sessions: Session[];
 }
 
 export function ActivityGraphCard({ sessions }: ActivityGraphCardProps) {
-  const [currentSessionSeconds, setCurrentSessionSeconds] = useState(0);
+  const { elapsedSeconds: currentSessionSeconds } = useTimer();
   const [hoveredDay, setHoveredDay] = useState<number | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -30,42 +31,6 @@ export function ActivityGraphCard({ sessions }: ActivityGraphCardProps) {
     }
     return baseTotals;
   }, [sessions, currentSessionSeconds]);
-
-  // Real-time update for current session (pattern from TimeRangeCard)
-  useEffect(() => {
-    const updateCurrentSession = () => {
-      const saved = localStorage.getItem("currentSession");
-      if (saved) {
-        try {
-          const data: TimerData = JSON.parse(saved);
-          if (data.state === "running" || data.state === "paused") {
-            setCurrentSessionSeconds(data.elapsedSeconds);
-          } else {
-            setCurrentSessionSeconds(0);
-          }
-        } catch (error) {
-          console.error("Failed to parse saved session:", error);
-          setCurrentSessionSeconds(0);
-        }
-      } else {
-        setCurrentSessionSeconds(0);
-      }
-    };
-
-    // Initial load
-    updateCurrentSession();
-
-    // Set up interval to update every second
-    const interval = setInterval(updateCurrentSession, 1000);
-
-    // Listen for storage events
-    window.addEventListener("storage", updateCurrentSession);
-
-    return () => {
-      clearInterval(interval);
-      window.removeEventListener("storage", updateCurrentSession);
-    };
-  }, []);
 
   // Canvas drawing logic
   useEffect(() => {

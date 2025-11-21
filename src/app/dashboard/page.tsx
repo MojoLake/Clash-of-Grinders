@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { CurrentSessionCard } from "@/components/dashboard/CurrentSessionCard";
 import { TimeRangeCard } from "@/components/dashboard/TimeRangeCard";
 import { ActivityGraphCard } from "@/components/dashboard/ActivityGraphCard";
+import { TimerProvider } from "@/contexts/TimerContext";
 import {
   formatDuration,
   getTodayDateRange,
@@ -117,46 +118,48 @@ export default async function DashboardPage() {
 
   return (
     <AppShell title="Dashboard">
-      <div className="p-6 space-y-6">
-        {/* Current Session Timer */}
-        <CurrentSessionCard />
+      <TimerProvider>
+        <div className="p-6 space-y-6">
+          {/* Current Session Timer */}
+          <CurrentSessionCard />
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <TimeRangeCard sessions={todaySessions} label="Today" />
-          <TimeRangeCard sessions={thisWeekSessions} label="This Week" />
-          <ActivityGraphCard sessions={last5DaysSessions} />
-        </div>
+          {/* Stats Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <TimeRangeCard sessions={todaySessions} label="Today" />
+            <TimeRangeCard sessions={thisWeekSessions} label="This Week" />
+            <ActivityGraphCard sessions={last5DaysSessions} />
+          </div>
 
-        {/* Recent Sessions */}
-        <Card className="p-6">
-          <h3 className="text-xl font-bold mb-4">Recent Sessions</h3>
-          {recentSessions.length === 0 ? (
-            <div className="text-center py-8 text-slate-400">
-              <p>No sessions yet. Start grinding!</p>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {recentSessions.map((session) => (
-                <div
-                  key={session.id}
-                  className="flex items-center justify-between p-3 rounded-lg bg-slate-800/50 hover:bg-slate-800/70 transition-colors"
-                >
-                  <div>
-                    <div className="font-medium">
-                      {formatDuration(session.durationSeconds)}
-                    </div>
-                    <div className="text-sm text-slate-400">
-                      {new Date(session.startedAt).toLocaleDateString()} at{" "}
-                      {new Date(session.startedAt).toLocaleTimeString()}
+          {/* Recent Sessions */}
+          <Card className="p-6">
+            <h3 className="text-xl font-bold mb-4">Recent Sessions</h3>
+            {recentSessions.length === 0 ? (
+              <div className="text-center py-8 text-slate-400">
+                <p>No sessions yet. Start grinding!</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {recentSessions.map((session) => (
+                  <div
+                    key={session.id}
+                    className="flex items-center justify-between p-3 rounded-lg bg-slate-800/50 hover:bg-slate-800/70 transition-colors"
+                  >
+                    <div>
+                      <div className="font-medium">
+                        {formatDuration(session.durationSeconds)}
+                      </div>
+                      <div className="text-sm text-slate-400">
+                        {new Date(session.startedAt).toLocaleDateString()} at{" "}
+                        {new Date(session.startedAt).toLocaleTimeString()}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </Card>
-      </div>
+                ))}
+              </div>
+            )}
+          </Card>
+        </div>
+      </TimerProvider>
     </AppShell>
   );
 }

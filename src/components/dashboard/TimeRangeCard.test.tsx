@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import { TimeRangeCard } from "./TimeRangeCard";
+import { TimerProvider } from "@/contexts/TimerContext";
 import type { Session, TimerData } from "@/lib/types";
 
 describe("TimeRangeCard", () => {
@@ -29,19 +30,31 @@ describe("TimeRangeCard", () => {
 
   describe("rendering", () => {
     it("renders the card with custom label", () => {
-      render(<TimeRangeCard sessions={[]} label="Today" />);
+      render(
+        <TimerProvider>
+          <TimeRangeCard sessions={[]} label="Today" />
+        </TimerProvider>
+      );
 
       expect(screen.getByText("Today")).toBeInTheDocument();
     });
 
     it("renders the card with 'This Week' label", () => {
-      render(<TimeRangeCard sessions={[]} label="This Week" />);
+      render(
+        <TimerProvider>
+          <TimeRangeCard sessions={[]} label="This Week" />
+        </TimerProvider>
+      );
 
       expect(screen.getByText("This Week")).toBeInTheDocument();
     });
 
     it("displays 0s when there are no sessions", () => {
-      render(<TimeRangeCard sessions={[]} label="Today" />);
+      render(
+        <TimerProvider>
+          <TimeRangeCard sessions={[]} label="Today" />
+        </TimerProvider>
+      );
 
       expect(screen.getByText("0s")).toBeInTheDocument();
     });
@@ -49,7 +62,11 @@ describe("TimeRangeCard", () => {
     it("displays formatted duration for single session", () => {
       const sessions = [createSession("s1", 3600)]; // 1 hour
 
-      render(<TimeRangeCard sessions={sessions} label="Today" />);
+      render(
+        <TimerProvider>
+          <TimeRangeCard sessions={sessions} label="Today" />
+        </TimerProvider>
+      );
 
       expect(screen.getByText("1h")).toBeInTheDocument();
     });
@@ -60,7 +77,11 @@ describe("TimeRangeCard", () => {
         createSession("s2", 5400), // 1 hour 30 minutes
       ];
 
-      render(<TimeRangeCard sessions={sessions} label="Today" />);
+      render(
+        <TimerProvider>
+          <TimeRangeCard sessions={sessions} label="Today" />
+        </TimerProvider>
+      );
 
       expect(screen.getByText("2h 30m")).toBeInTheDocument();
     });
@@ -68,7 +89,11 @@ describe("TimeRangeCard", () => {
     it("formats minutes correctly", () => {
       const sessions = [createSession("s1", 2700)]; // 45 minutes
 
-      render(<TimeRangeCard sessions={sessions} label="Today" />);
+      render(
+        <TimerProvider>
+          <TimeRangeCard sessions={sessions} label="Today" />
+        </TimerProvider>
+      );
 
       expect(screen.getByText("45m")).toBeInTheDocument();
     });
@@ -76,7 +101,11 @@ describe("TimeRangeCard", () => {
     it("formats seconds correctly for short durations", () => {
       const sessions = [createSession("s1", 45)]; // 45 seconds
 
-      render(<TimeRangeCard sessions={sessions} label="Today" />);
+      render(
+        <TimerProvider>
+          <TimeRangeCard sessions={sessions} label="Today" />
+        </TimerProvider>
+      );
 
       expect(screen.getByText("45s")).toBeInTheDocument();
     });
@@ -94,7 +123,11 @@ describe("TimeRangeCard", () => {
 
       localStorage.setItem("currentSession", JSON.stringify(currentSession));
 
-      render(<TimeRangeCard sessions={sessions} label="Today" />);
+      render(
+        <TimerProvider>
+          <TimeRangeCard sessions={sessions} label="Today" />
+        </TimerProvider>
+      );
 
       // Should show 1h + 30m = 1h 30m
       expect(screen.getByText("1h 30m")).toBeInTheDocument();
@@ -111,7 +144,11 @@ describe("TimeRangeCard", () => {
 
       localStorage.setItem("currentSession", JSON.stringify(currentSession));
 
-      render(<TimeRangeCard sessions={sessions} label="Today" />);
+      render(
+        <TimerProvider>
+          <TimeRangeCard sessions={sessions} label="Today" />
+        </TimerProvider>
+      );
 
       // Should show 1h + 10m = 1h 10m
       expect(screen.getByText("1h 10m")).toBeInTheDocument();
@@ -128,7 +165,11 @@ describe("TimeRangeCard", () => {
 
       localStorage.setItem("currentSession", JSON.stringify(currentSession));
 
-      render(<TimeRangeCard sessions={sessions} label="Today" />);
+      render(
+        <TimerProvider>
+          <TimeRangeCard sessions={sessions} label="Today" />
+        </TimerProvider>
+      );
 
       // Should only show completed session: 1h
       expect(screen.getByText("1h")).toBeInTheDocument();
@@ -137,7 +178,11 @@ describe("TimeRangeCard", () => {
     it("handles missing localStorage data", () => {
       const sessions = [createSession("s1", 3600)]; // 1 hour completed
 
-      render(<TimeRangeCard sessions={sessions} label="Today" />);
+      render(
+        <TimerProvider>
+          <TimeRangeCard sessions={sessions} label="Today" />
+        </TimerProvider>
+      );
 
       // Should show only completed sessions
       expect(screen.getByText("1h")).toBeInTheDocument();
@@ -149,7 +194,11 @@ describe("TimeRangeCard", () => {
       localStorage.setItem("currentSession", "invalid json {");
 
       // Should not throw error
-      render(<TimeRangeCard sessions={sessions} label="Today" />);
+      render(
+        <TimerProvider>
+          <TimeRangeCard sessions={sessions} label="Today" />
+        </TimerProvider>
+      );
 
       // Should show only completed sessions
       expect(screen.getByText("1h")).toBeInTheDocument();
@@ -161,7 +210,11 @@ describe("TimeRangeCard", () => {
       // Missing required fields
       localStorage.setItem("currentSession", JSON.stringify({ invalid: true }));
 
-      render(<TimeRangeCard sessions={sessions} label="Today" />);
+      render(
+        <TimerProvider>
+          <TimeRangeCard sessions={sessions} label="Today" />
+        </TimerProvider>
+      );
 
       // Should show only completed sessions
       expect(screen.getByText("1h")).toBeInTheDocument();
@@ -181,7 +234,11 @@ describe("TimeRangeCard", () => {
 
       localStorage.setItem("currentSession", JSON.stringify(currentSession));
 
-      render(<TimeRangeCard sessions={sessions} label="Today" />);
+      render(
+        <TimerProvider>
+          <TimeRangeCard sessions={sessions} label="Today" />
+        </TimerProvider>
+      );
 
       // Should show completed + current immediately
       expect(screen.getByText("1h 10m")).toBeInTheDocument();
@@ -192,7 +249,9 @@ describe("TimeRangeCard", () => {
 
       // First render without current session
       const { unmount } = render(
-        <TimeRangeCard sessions={sessions} label="Today" />
+        <TimerProvider>
+          <TimeRangeCard sessions={sessions} label="Today" />
+        </TimerProvider>
       );
       expect(screen.getByText("1h")).toBeInTheDocument();
       unmount();
@@ -207,7 +266,11 @@ describe("TimeRangeCard", () => {
       localStorage.setItem("currentSession", JSON.stringify(currentSession));
 
       // Re-render component
-      render(<TimeRangeCard sessions={sessions} label="Today" />);
+      render(
+        <TimerProvider>
+          <TimeRangeCard sessions={sessions} label="Today" />
+        </TimerProvider>
+      );
 
       // Should now include current session
       expect(screen.getByText("1h 30m")).toBeInTheDocument();
@@ -225,7 +288,9 @@ describe("TimeRangeCard", () => {
 
       localStorage.setItem("currentSession", JSON.stringify(runningSession));
       const { unmount } = render(
-        <TimeRangeCard sessions={sessions} label="Today" />
+        <TimerProvider>
+          <TimeRangeCard sessions={sessions} label="Today" />
+        </TimerProvider>
       );
       expect(screen.getByText("1h 10m")).toBeInTheDocument();
       unmount();
@@ -240,7 +305,11 @@ describe("TimeRangeCard", () => {
       localStorage.setItem("currentSession", JSON.stringify(idleSession));
 
       // Re-render
-      render(<TimeRangeCard sessions={sessions} label="Today" />);
+      render(
+        <TimerProvider>
+          <TimeRangeCard sessions={sessions} label="Today" />
+        </TimerProvider>
+      );
 
       // Should only show completed sessions
       expect(screen.getByText("1h")).toBeInTheDocument();
@@ -251,13 +320,21 @@ describe("TimeRangeCard", () => {
     it("handles very large durations", () => {
       const sessions = [createSession("s1", 86400)]; // 24 hours
 
-      render(<TimeRangeCard sessions={sessions} label="This Week" />);
+      render(
+        <TimerProvider>
+          <TimeRangeCard sessions={sessions} label="This Week" />
+        </TimerProvider>
+      );
 
       expect(screen.getByText("24h")).toBeInTheDocument();
     });
 
     it("handles empty sessions array with no localStorage", () => {
-      render(<TimeRangeCard sessions={[]} label="This Week" />);
+      render(
+        <TimerProvider>
+          <TimeRangeCard sessions={[]} label="This Week" />
+        </TimerProvider>
+      );
 
       expect(screen.getByText("0s")).toBeInTheDocument();
     });
@@ -271,7 +348,11 @@ describe("TimeRangeCard", () => {
         createSession("s5", 600), // 10 minutes
       ];
 
-      render(<TimeRangeCard sessions={sessions} label="This Week" />);
+      render(
+        <TimerProvider>
+          <TimeRangeCard sessions={sessions} label="This Week" />
+        </TimerProvider>
+      );
 
       expect(screen.getByText("50m")).toBeInTheDocument();
     });
@@ -282,7 +363,11 @@ describe("TimeRangeCard", () => {
         createSession("s2", 3600), // 1 hour
       ];
 
-      render(<TimeRangeCard sessions={sessions} label="Today" />);
+      render(
+        <TimerProvider>
+          <TimeRangeCard sessions={sessions} label="Today" />
+        </TimerProvider>
+      );
 
       expect(screen.getByText("1h")).toBeInTheDocument();
     });
@@ -290,7 +375,11 @@ describe("TimeRangeCard", () => {
 
   describe("label customization", () => {
     it("works with any custom label", () => {
-      render(<TimeRangeCard sessions={[]} label="Custom Period" />);
+      render(
+        <TimerProvider>
+          <TimeRangeCard sessions={[]} label="Custom Period" />
+        </TimerProvider>
+      );
 
       expect(screen.getByText("Custom Period")).toBeInTheDocument();
     });
@@ -298,7 +387,11 @@ describe("TimeRangeCard", () => {
     it("displays correct data regardless of label", () => {
       const sessions = [createSession("s1", 7200)]; // 2 hours
 
-      render(<TimeRangeCard sessions={sessions} label="This Month" />);
+      render(
+        <TimerProvider>
+          <TimeRangeCard sessions={sessions} label="This Month" />
+        </TimerProvider>
+      );
 
       expect(screen.getByText("This Month")).toBeInTheDocument();
       expect(screen.getByText("2h")).toBeInTheDocument();

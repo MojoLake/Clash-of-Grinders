@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { ActivityGraphCard } from "./ActivityGraphCard";
+import { TimerProvider } from "@/contexts/TimerContext";
 import type { Session } from "@/lib/types";
 import { subDays } from "date-fns";
 
@@ -15,12 +16,20 @@ describe("ActivityGraphCard", () => {
   });
 
   it("renders the card with title", () => {
-    render(<ActivityGraphCard sessions={[]} />);
+    render(
+      <TimerProvider>
+        <ActivityGraphCard sessions={[]} />
+      </TimerProvider>
+    );
     expect(screen.getByText("Last 5 Days")).toBeInTheDocument();
   });
 
   it("renders 5 day labels", () => {
-    render(<ActivityGraphCard sessions={[]} />);
+    render(
+      <TimerProvider>
+        <ActivityGraphCard sessions={[]} />
+      </TimerProvider>
+    );
     
     // Should have "Today" label
     expect(screen.getByText("Today")).toBeInTheDocument();
@@ -31,12 +40,20 @@ describe("ActivityGraphCard", () => {
   });
 
   it("shows 'No activity yet' message when all days have zero seconds", () => {
-    render(<ActivityGraphCard sessions={[]} />);
+    render(
+      <TimerProvider>
+        <ActivityGraphCard sessions={[]} />
+      </TimerProvider>
+    );
     expect(screen.getByText("No activity yet")).toBeInTheDocument();
   });
 
   it("does not show graph when there is no activity", () => {
-    const { container } = render(<ActivityGraphCard sessions={[]} />);
+    const { container } = render(
+      <TimerProvider>
+        <ActivityGraphCard sessions={[]} />
+      </TimerProvider>
+    );
     const canvas = container.querySelector("canvas");
     expect(canvas).not.toBeInTheDocument();
   });
@@ -54,7 +71,11 @@ describe("ActivityGraphCard", () => {
       },
     ];
 
-    const { container } = render(<ActivityGraphCard sessions={sessions} />);
+    const { container } = render(
+      <TimerProvider>
+        <ActivityGraphCard sessions={sessions} />
+      </TimerProvider>
+    );
     const canvas = container.querySelector("canvas");
     expect(canvas).toBeInTheDocument();
   });
@@ -72,13 +93,21 @@ describe("ActivityGraphCard", () => {
       },
     ];
 
-    render(<ActivityGraphCard sessions={sessions} />);
+    render(
+      <TimerProvider>
+        <ActivityGraphCard sessions={sessions} />
+      </TimerProvider>
+    );
     expect(screen.getByText("Peak Day")).toBeInTheDocument();
     expect(screen.getByText(/Today • 1h/)).toBeInTheDocument();
   });
 
   it("does not show peak day stat when there is no activity", () => {
-    render(<ActivityGraphCard sessions={[]} />);
+    render(
+      <TimerProvider>
+        <ActivityGraphCard sessions={[]} />
+      </TimerProvider>
+    );
     expect(screen.queryByText("Peak Day")).not.toBeInTheDocument();
   });
 
@@ -105,7 +134,11 @@ describe("ActivityGraphCard", () => {
       })
     );
 
-    render(<ActivityGraphCard sessions={sessions} />);
+    render(
+      <TimerProvider>
+        <ActivityGraphCard sessions={sessions} />
+      </TimerProvider>
+    );
     
     // Peak day should show total of completed + current session (1h)
     expect(screen.getByText(/Today • 1h/)).toBeInTheDocument();
@@ -133,7 +166,11 @@ describe("ActivityGraphCard", () => {
       },
     ];
 
-    render(<ActivityGraphCard sessions={sessions} />);
+    render(
+      <TimerProvider>
+        <ActivityGraphCard sessions={sessions} />
+      </TimerProvider>
+    );
     
     // Peak day should show total of 2h 30m
     expect(screen.getByText(/Today • 2h 30m/)).toBeInTheDocument();
@@ -162,7 +199,11 @@ describe("ActivityGraphCard", () => {
       },
     ];
 
-    render(<ActivityGraphCard sessions={sessions} />);
+    render(
+      <TimerProvider>
+        <ActivityGraphCard sessions={sessions} />
+      </TimerProvider>
+    );
     
     // Peak day should be two days ago (not today)
     expect(screen.getByText("Peak Day")).toBeInTheDocument();
@@ -182,7 +223,11 @@ describe("ActivityGraphCard", () => {
       })
     );
 
-    render(<ActivityGraphCard sessions={sessions} />);
+    render(
+      <TimerProvider>
+        <ActivityGraphCard sessions={sessions} />
+      </TimerProvider>
+    );
     
     // Should include paused session in today's total
     expect(screen.getByText(/Today • 30m/)).toBeInTheDocument();
@@ -200,7 +245,11 @@ describe("ActivityGraphCard", () => {
       })
     );
 
-    render(<ActivityGraphCard sessions={sessions} />);
+    render(
+      <TimerProvider>
+        <ActivityGraphCard sessions={sessions} />
+      </TimerProvider>
+    );
     
     // Should not include idle session
     expect(screen.getByText("No activity yet")).toBeInTheDocument();
@@ -211,7 +260,13 @@ describe("ActivityGraphCard", () => {
     localStorage.setItem("currentSession", "invalid json");
 
     // Should not throw error
-    expect(() => render(<ActivityGraphCard sessions={sessions} />)).not.toThrow();
+    expect(() =>
+      render(
+        <TimerProvider>
+          <ActivityGraphCard sessions={sessions} />
+        </TimerProvider>
+      )
+    ).not.toThrow();
     expect(screen.getByText("No activity yet")).toBeInTheDocument();
   });
 
@@ -228,7 +283,11 @@ describe("ActivityGraphCard", () => {
       },
     ];
 
-    render(<ActivityGraphCard sessions={sessions} />);
+    render(
+      <TimerProvider>
+        <ActivityGraphCard sessions={sessions} />
+      </TimerProvider>
+    );
     
     // Should still render all 5 day labels
     const dayLabels = screen.getAllByText(/^(Mon|Tue|Wed|Thu|Fri|Sat|Sun|Today)$/);

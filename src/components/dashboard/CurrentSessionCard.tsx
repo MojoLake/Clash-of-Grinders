@@ -1,80 +1,33 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { formatDurationWithSeconds } from "@/lib/sessions";
-import type { TimerState, TimerData } from "@/lib/types";
 import { createSessionAction } from "@/lib/actions/sessions";
+import { useTimer } from "@/contexts/TimerContext";
 
 export function CurrentSessionCard() {
   const router = useRouter();
-
-  // Lazy initialization: read from localStorage only once on mount
-  const [timerState, setTimerState] = useState<TimerState>(() => {
-    if (typeof window === "undefined") return "idle";
-    const saved = localStorage.getItem("currentSession");
-    if (saved) {
-      try {
-        const data: TimerData = JSON.parse(saved);
-        return data.state;
-      } catch (error) {
-        console.error("Failed to parse saved session:", error);
-        localStorage.removeItem("currentSession");
-      }
-    }
-    return "idle";
-  });
-
-  const [elapsedSeconds, setElapsedSeconds] = useState(() => {
-    if (typeof window === "undefined") return 0;
-    const saved = localStorage.getItem("currentSession");
-    if (saved) {
-      try {
-        const data: TimerData = JSON.parse(saved);
-        return data.elapsedSeconds;
-      } catch (error) {
-        console.error("Failed to parse saved session:", error);
-        localStorage.removeItem("currentSession");
-      }
-    }
-    return 0;
-  });
-
-  // Interval for timer updates
-  useEffect(() => {
-    if (timerState === "running") {
-      const interval = setInterval(() => {
-        setElapsedSeconds((prev) => prev + 1);
-      }, 1000);
-      return () => clearInterval(interval);
-    }
-  }, [timerState]);
-
-  // Save to localStorage whenever state changes
-  useEffect(() => {
-    if (timerState !== "idle") {
-      const data: TimerData = {
-        state: timerState,
-        startedAt: 0, // Not needed for Option B, but required by type
-        elapsedSeconds,
-      };
-      localStorage.setItem("currentSession", JSON.stringify(data));
-    }
-  }, [timerState, elapsedSeconds]);
+  const {
+    timerState,
+    elapsedSeconds,
+    startTimer,
+    pauseTimer,
+    resumeTimer,
+    endTimer,
+  } = useTimer();
 
   const handleStart = () => {
-    setTimerState("running");
-    setElapsedSeconds(0);
+    startTimer();
   };
 
   const handlePause = () => {
-    setTimerState("paused");
+    pauseTimer();
   };
 
   const handleResume = () => {
-    setTimerState("running");
+    resumeTimer();
   };
 
   const handleEnd = async () => {
@@ -84,35 +37,26 @@ export function CurrentSessionCard() {
       return;
     }
 
-    const endedAt = new Date();
-    const startedAt = new Date(endedAt.getTime() - elapsedSeconds * 1000);
-
     try {
-      // Save session via Server Action
-      const result = await createSessionAction({
-        startedAt: startedAt.toISOString(),
-        endedAt: endedAt.toISOString(),
-        durationSeconds: elapsedSeconds,
+      await endTimer(async (sessionData) => {
+        // Save session via Server Action
+        const result = await createSessionAction(sessionData);
+
+        if (!result.success) {
+          throw new Error(result.error);
+        }
+
+        console.log("Session saved successfully");
       });
-
-      if (!result.success) {
-        alert(`Error saving session: ${result.error}`);
-        return;
-      }
-
-      console.log("Session saved successfully");
-
-      // Reset state
-      setTimerState("idle");
-      setElapsedSeconds(0);
-      localStorage.removeItem("currentSession");
 
       // Refresh the page to update Recent Sessions list
       router.refresh();
     } catch (error) {
       console.error("Error saving session:", error);
       alert(
-        "An unexpected error occurred while saving the session. Please try again."
+        error instanceof Error
+          ? `Error saving session: ${error.message}`
+          : "An unexpected error occurred while saving the session. Please try again."
       );
     }
   };
